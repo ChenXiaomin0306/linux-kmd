@@ -43,17 +43,17 @@ of the same variant of the Linux kernel and not on any one specific build.
 %build
 pwd
 
-patch -p1< dualdrm/4.18.0_support_dual_drm.patch
+patch -p0 < dualdrm/4.18.0-372_support_dual_drm.patch
 
 cd orig/drivers/gpu/drm
 DRMPATH=`pwd`
 sed -i "s:define TRACE_INCLUDE_PATH.*:define TRACE_INCLUDE_PATH ${DRMPATH}:g" drm_trace.h
-%{__make} -C /lib/modules/%{_kversion}/build ARCH=x86 modules M=$PWD
+{__make} %{?_smp_mflags} -C /lib/modules/%{_kversion}/build ARCH=x86 modules M=$PWDcp -f Module.symvers ../../../../Module_almaos8.6.symvers
 cp -f Module.symvers ../../../../Module_almaos8.6.symvers
 cd -
 
-%{__make} KLIB=/lib/modules/%{_kversion}/ usedefconfig
-%{__make} KLIB=/lib/modules/%{_kversion}/ -j`nproc`
+%{__make} %{?_smp_mflags} KLIB=/lib/modules/%{_kversion}/ usedefconfig
+%{__make} %{?_smp_mflags} KLIB=/lib/modules/%{_kversion}/
 
 %install
 %{__install} -d %{buildroot}/lib/modules/%{_kversion}/extra/%{kmod_name}/

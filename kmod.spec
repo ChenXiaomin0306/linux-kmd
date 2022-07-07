@@ -48,7 +48,7 @@ patch -p0 < dualdrm/4.18.0-372_support_dual_drm.patch
 cd orig/drivers/gpu/drm
 DRMPATH=`pwd`
 sed -i "s:define TRACE_INCLUDE_PATH.*:define TRACE_INCLUDE_PATH ${DRMPATH}:g" drm_trace.h
-{__make} %{?_smp_mflags} -C /lib/modules/%{_kversion}/build ARCH=x86 modules M=$PWD
+%{__make} %{?_smp_mflags} -C /lib/modules/%{_kversion}/build ARCH=x86 modules M=$PWD
 cp -f Module.symvers ../../../../Module_almaos8.6.symvers
 cd -
 

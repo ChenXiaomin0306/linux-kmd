@@ -1,11 +1,11 @@
 # Define the kmod package name here.
 %define kmod_name ukmd
 
-%{!?_ver: %define _ver 4.18.0_372}
+%{!?_ver: %define _ver 4.18.0-372.13.1}
 %{!?_rever: %define _rever 54017}
 
 # If _kversion isn't defined on the rpmbuild line, define it here.
-%{!?_kversion: %define _kversion 4.18.0_372}
+%{!?_kversion: %define _kversion 4.18.0-372.13.1}
 
 Name:    kmod-%{kmod_name}
 Version: %{_ver}
@@ -97,7 +97,7 @@ echo "override i915_spi * extra/ukmd" >> %{buildroot}%{_sysconfdir}/depmod.d/kmo
 %post
 # do what kmod will do
 echo "Install working. This may take some time ..."
-for kv in `ls /lib/modules | grep %{_kversion} `; do
+for kv in `ls /lib/modules | grep 4.18.0-372`; do
     if [ %{_kversion} != ${kv} ]; then
         mkdir -p /lib/modules/${kv}/extra/ukmd/
 

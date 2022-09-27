@@ -63,6 +63,9 @@ static void heartbeat(struct work_struct *wrk)
 		container_of(wrk, typeof(*engine), heartbeat.work.work);
 	struct intel_context *ce = engine->kernel_context;
 	struct i915_request *rq;
+	if (engine && (engine->class == VIDEO_DECODE_CLASS))
+		attr.priority = I915_PRIORITY_MASK;
+
 
 	rq = engine->heartbeat.systole;
 	if (rq && i915_request_completed(rq)) {

@@ -56,6 +56,7 @@ static struct device_type drm_sysfs_device_connector = {
 };
 
 struct class *drm_class;
+EXPORT_SYMBOL(drm_class);
 
 #ifdef CONFIG_ACPI
 static bool drm_connector_acpi_bus_match(struct device *dev)

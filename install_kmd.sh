@@ -4,8 +4,6 @@ if [ ! -d /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/ ]; then
 	mkdir -p /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
 fi
 
-patch -p0< dualdrm/4.18.0-372_support_dual_drm.patch
-
 cd orig/drivers/gpu/drm
 DRMPATH=`pwd`
 sed -i "s:define TRACE_INCLUDE_PATH.*:define TRACE_INCLUDE_PATH ${DRMPATH}:g" drm_trace.h
@@ -13,7 +11,7 @@ make -C /lib/modules/${TARGET_KERNEL_VERSION}/build  ARCH=x86 modules M=$PWD -I$
 cd -
 
 cp -f ./orig/drivers/gpu/drm/drm.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/drm.ko
-cp -f ./orig/drivers/gpu/drm/Module.symvers ./Module_almaos8.6.symvers
+cp -f ./orig/drivers/gpu/drm/Module.symvers ./Module_almaos.symvers
 
 make usedefconfig
 make -j32

@@ -53,8 +53,10 @@ MODULE_AUTHOR("Gareth Hughes, Leif Delgass, José Fonseca, Jon Smirl");
 MODULE_DESCRIPTION("DRM shared core routines");
 MODULE_LICENSE("GPL and additional rights");
 
-static DEFINE_SPINLOCK(drm_minor_lock);
-static struct idr drm_minors_idr;
+DEFINE_SPINLOCK(drm_minor_lock);
+EXPORT_SYMBOL(drm_minor_lock);
+struct idr drm_minors_idr;
+EXPORT_SYMBOL(drm_minors_idr);
 
 /*
  * If the drm core fails to init for whatever reason,
@@ -65,7 +67,8 @@ static struct idr drm_minors_idr;
  */
 static bool drm_core_init_complete;
 
-static struct dentry *drm_debugfs_root;
+struct dentry *drm_debugfs_root;
+EXPORT_SYMBOL(drm_debugfs_root);
 
 DEFINE_STATIC_SRCU(drm_unplug_srcu);
 

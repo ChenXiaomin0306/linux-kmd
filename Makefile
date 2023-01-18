@@ -112,7 +112,7 @@ mrproper:
 		echo " done."								;\
 	fi										;\
 	echo "$(CONFIG_MD5)" > .kernel_config_md5
-	@$(MAKE) -f Makefile.real "$@" KBUILD_EXTRA_SYMBOLS=$(shell pwd)/Module_almaos8.6.symvers
+	@$(MAKE) -f Makefile.real "$@" KBUILD_EXTRA_SYMBOLS=$(shell pwd)/Module_almaos.symvers
 
 .PHONY: defconfig-help
 defconfig-help:

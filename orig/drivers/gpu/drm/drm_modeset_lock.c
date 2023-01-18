@@ -76,7 +76,8 @@
  * lists and lookup data structures.
  */
 
-static DEFINE_WW_CLASS(crtc_ww_class);
+DEFINE_WW_CLASS(crtc_ww_class);
+EXPORT_SYMBOL(crtc_ww_class);
 
 #if IS_ENABLED(CONFIG_DRM_DEBUG_MODESET_LOCK)
 static noinline depot_stack_handle_t __drm_stack_depot_save(void)

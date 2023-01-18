@@ -1036,6 +1036,21 @@ static bool force_probe(u16 device_id, const char *devices)
 	return ret;
 }
 
+static void plx_ignore_ur(struct pci_dev *pdev)
+{
+	int cap;
+	u32 mask;
+
+	cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
+	if (cap) {
+		pci_read_config_dword(pdev, cap + PCI_ERR_UNCOR_MASK, &mask);
+
+		mask |= PCI_ERR_UNC_UNSUP;
+		pci_write_config_dword(pdev, cap + PCI_ERR_UNCOR_MASK, mask);
+		dev_info(&pdev->dev, "ignore unspported request in PLX switch\n");
+        }
+}
+
 static int i915_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
 	struct intel_device_info *intel_info =
@@ -1054,6 +1069,14 @@ static int i915_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		return -ENODEV;
 	}
 
+	struct pci_dev  *bridge = NULL;
+	bridge = pci_upstream_bridge(pdev);
+	while(bridge) {
+		int d = bridge->device;
+		if(d == 0x8747)
+			plx_ignore_ur(bridge);
+		bridge = pci_upstream_bridge(bridge);
+	} 
 	/* Only bind to function 0 of the device. Early generations
 	 * used function 1 as a placeholder for multi-head. This causes
 	 * us confusion instead, especially on the systems where both

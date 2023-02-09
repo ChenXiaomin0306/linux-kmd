@@ -1146,8 +1146,8 @@ static int __init i915_init(void)
 	if (i915_modparams.modeset == 0)
 		use_kms = false;
 
-	if (vgacon_text_force() && i915_modparams.modeset == -1)
-		use_kms = false;
+//	if (vgacon_text_force() && i915_modparams.modeset == -1)
+//		use_kms = false;
 
 	if (!use_kms) {
 		/* Silently fail loading to not upset userspace. */

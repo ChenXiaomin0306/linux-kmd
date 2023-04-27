@@ -23,7 +23,7 @@ ExclusiveArch: x86_64
 # aaaaSource0:  %{kmod_name}-%{version}.tar.gz
 Source0:  %{name}-%{version}.tar.gz
 Source1:  dg1_guc_49.0.1.bin
-Source2:  dg1_huc_7.9.5.bin
+Source2:  dg1_huc_7.9.9.bin
 Source3:  dg1_dmc_ver2_02.bin
 
 # Magic hidden here.
@@ -95,7 +95,7 @@ echo "override mei-gsc * extra/ukmd" >> %{buildroot}%{_sysconfdir}/depmod.d/kmod
 /lib/modules/%{_kversion}/extra/%{kmod_name}/mei-me.ko
 /lib/modules/%{_kversion}/extra/%{kmod_name}/mei-gsc.ko
 /lib/firmware/i915/dg1_guc_49.0.1.bin
-/lib/firmware/i915/dg1_huc_7.9.5.bin
+/lib/firmware/i915/dg1_huc_7.9.9.bin
 /lib/firmware/i915/dg1_dmc_ver2_02.bin
 
 %clean

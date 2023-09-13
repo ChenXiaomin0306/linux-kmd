@@ -50,7 +50,7 @@ static struct device_type drm_sysfs_device_minor = {
 	.name = "drm_minor"
 };
 
-extern struct class *drm_class;
+struct class *drm_class;
 
 static char *drm_devnode(struct device *dev, umode_t *mode)
 {

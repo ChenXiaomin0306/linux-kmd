@@ -4,21 +4,12 @@ if [ ! -d /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/ ]; then
 	mkdir -p /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
 fi
 
-cd orig/drivers/gpu/drm
-DRMPATH=`pwd`
-sed -i "s:define TRACE_INCLUDE_PATH.*:define TRACE_INCLUDE_PATH ${DRMPATH}:g" drm_trace.h
-make -C /lib/modules/${TARGET_KERNEL_VERSION}/build  ARCH=x86 modules M=$PWD -I$PWD
-cd -
 
-cp -f ./orig/drivers/gpu/drm/drm.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/drm.ko
-cp -f ./orig/drivers/gpu/drm/Module.symvers ./Module_almaos.symvers
-
-make usedefconfig
-make -j32
+make usedefconfig 
+make -j32 
 cp -f ./compat/drm_ukmd_compat.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
-cp -f ./drivers/gpu/drm/drm_ukmd.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
-cp -f ./drivers/gpu/drm/drm_ukmd_kms_helper.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
-cp -f ./drivers/gpu/drm/drm_ukmd_panel_orientation_quirks.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
+cp -f ./drivers/gpu/drm/drm.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
+cp -f ./drivers/gpu/drm/drm_kms_helper.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
 cp -f ./drivers/gpu/drm/i915/i915.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
 
 cp -f ./drivers/misc/mei/mei.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/

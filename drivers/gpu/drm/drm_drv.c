@@ -50,8 +50,9 @@ MODULE_AUTHOR("Gareth Hughes, Leif Delgass, José Fonseca, Jon Smirl");
 MODULE_DESCRIPTION("DRM shared core routines");
 MODULE_LICENSE("GPL and additional rights");
 
-extern spinlock_t drm_minor_lock;
-extern struct idr drm_minors_idr;
+static DEFINE_SPINLOCK(drm_minor_lock);
+static struct idr drm_minors_idr;
+
 /*
  * If the drm core fails to init for whatever reason,
  * we should prevent any drivers from registering with it.
@@ -61,7 +62,7 @@ extern struct idr drm_minors_idr;
  */
 static bool drm_core_init_complete = false;
 
-extern struct dentry *drm_debugfs_root;
+static struct dentry *drm_debugfs_root;
 
 DEFINE_STATIC_SRCU(drm_unplug_srcu);
 
@@ -1134,7 +1135,6 @@ static void drm_core_exit(void)
 
 static int __init drm_core_init(void)
 {
-#if 0
 	int ret;
 
 	drm_connector_ida_init();
@@ -1160,11 +1160,6 @@ static int __init drm_core_init(void)
 error:
 	drm_core_exit();
 	return ret;
-#endif
-	drm_core_init_complete = true;
-
-	DRM_DEBUG("backporting Initialized\n");
-	return 0;
 }
 
 module_init(drm_core_init);

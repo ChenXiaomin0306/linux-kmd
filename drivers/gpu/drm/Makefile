@@ -3,7 +3,7 @@
 # Makefile for the drm device driver.  This driver provides support for the
 # Direct Rendering Infrastructure (DRI) in XFree86 4.1.0 and higher.
 
-drm_ukmd-y       :=	drm_auth.o drm_cache.o \
+drm-y       :=	drm_auth.o drm_cache.o \
 		drm_file.o drm_gem.o drm_ioctl.o drm_irq.o \
 		drm_memory.o drm_drv.o \
 		drm_sysfs.o drm_hashtab.o drm_mm.o \
@@ -19,18 +19,18 @@ drm_ukmd-y       :=	drm_auth.o drm_cache.o \
 		drm_syncobj.o drm_lease.o drm_writeback.o drm_client.o \
 		drm_client_modeset.o drm_atomic_uapi.o drm_hdcp.o
 
-drm_ukmd-$(CPTCFG_DRM_LEGACY) += drm_legacy_misc.o drm_bufs.o drm_context.o drm_dma.o drm_scatter.o drm_lock.o
-drm_ukmd-$(CPTCFG_DRM_LIB_RANDOM) += lib/drm_random.o
-drm_ukmd-$(CPTCFG_DRM_VM) += drm_vm.o
-drm_ukmd-$(CONFIG_COMPAT) += drm_ioc32.o
-drm_ukmd-$(CPTCFG_DRM_GEM_CMA_HELPER) += drm_gem_cma_helper.o
-drm_ukmd-$(CPTCFG_DRM_GEM_SHMEM_HELPER) += drm_gem_shmem_helper.o
-drm_ukmd-$(CPTCFG_DRM_PANEL) += drm_panel.o
-drm_ukmd-$(CONFIG_OF) += drm_of.o
-drm_ukmd-$(CONFIG_AGP) += drm_agpsupport.o
-drm_ukmd-$(CONFIG_PCI) += drm_pci.o
-drm_ukmd-$(CONFIG_DEBUG_FS) += drm_debugfs.o drm_debugfs_crc.o
-drm_ukmd-$(CPTCFG_DRM_LOAD_EDID_FIRMWARE) += drm_edid_load.o
+drm-$(CPTCFG_DRM_LEGACY) += drm_legacy_misc.o drm_bufs.o drm_context.o drm_dma.o drm_scatter.o drm_lock.o
+drm-$(CPTCFG_DRM_LIB_RANDOM) += lib/drm_random.o
+drm-$(CPTCFG_DRM_VM) += drm_vm.o
+drm-$(CONFIG_COMPAT) += drm_ioc32.o
+drm-$(CPTCFG_DRM_GEM_CMA_HELPER) += drm_gem_cma_helper.o
+drm-$(CPTCFG_DRM_GEM_SHMEM_HELPER) += drm_gem_shmem_helper.o
+drm-$(CPTCFG_DRM_PANEL) += drm_panel.o
+drm-$(CONFIG_OF) += drm_of.o
+drm-$(CONFIG_AGP) += drm_agpsupport.o
+drm-$(CONFIG_PCI) += drm_pci.o
+drm-$(CONFIG_DEBUG_FS) += drm_debugfs.o drm_debugfs_crc.o
+drm-$(CPTCFG_DRM_LOAD_EDID_FIRMWARE) += drm_edid_load.o
 
 drm_vram_helper-y := drm_gem_vram_helper.o \
 		     drm_vram_helper_common.o
@@ -39,7 +39,7 @@ obj-$(CPTCFG_DRM_VRAM_HELPER) += drm_vram_helper.o
 drm_ttm_helper-y := drm_gem_ttm_helper.o
 obj-$(CPTCFG_DRM_TTM_HELPER) += drm_ttm_helper.o
 
-drm_ukmd_kms_helper-y := drm_crtc_helper.o drm_dp_helper.o drm_dsc.o drm_probe_helper.o \
+drm_kms_helper-y := drm_crtc_helper.o drm_dp_helper.o drm_dsc.o drm_probe_helper.o \
 		drm_plane_helper.o drm_dp_mst_topology.o drm_atomic_helper.o \
 		drm_kms_helper_common.o drm_dp_dual_mode_helper.o \
 		drm_simple_kms_helper.o drm_modeset_helper.o \
@@ -47,20 +47,20 @@ drm_ukmd_kms_helper-y := drm_crtc_helper.o drm_dp_helper.o drm_dsc.o drm_probe_h
 		drm_atomic_state_helper.o drm_damage_helper.o \
 		drm_format_helper.o drm_self_refresh_helper.o
 
-drm_ukmd_kms_helper-$(CPTCFG_DRM_PANEL_BRIDGE) += bridge/panel.o
-drm_ukmd_kms_helper-$(CPTCFG_DRM_FBDEV_EMULATION) += drm_fb_helper.o
-drm_ukmd_kms_helper-$(CPTCFG_DRM_KMS_CMA_HELPER) += drm_fb_cma_helper.o
-drm_ukmd_kms_helper-$(CPTCFG_DRM_DP_AUX_CHARDEV) += drm_dp_aux_dev.o
-drm_ukmd_kms_helper-$(CPTCFG_DRM_DP_CEC) += drm_dp_cec.o
+drm_kms_helper-$(CPTCFG_DRM_PANEL_BRIDGE) += bridge/panel.o
+drm_kms_helper-$(CPTCFG_DRM_FBDEV_EMULATION) += drm_fb_helper.o
+drm_kms_helper-$(CPTCFG_DRM_KMS_CMA_HELPER) += drm_fb_cma_helper.o
+drm_kms_helper-$(CPTCFG_DRM_DP_AUX_CHARDEV) += drm_dp_aux_dev.o
+drm_kms_helper-$(CPTCFG_DRM_DP_CEC) += drm_dp_cec.o
 
-obj-$(CPTCFG_DRM_KMS_HELPER) += drm_ukmd_kms_helper.o
+obj-$(CPTCFG_DRM_KMS_HELPER) += drm_kms_helper.o
 obj-$(CPTCFG_DRM_DEBUG_SELFTEST) += selftests/
 
-obj-$(CPTCFG_DRM)	+= drm_ukmd.o
+obj-$(CPTCFG_DRM)	+= drm.o
 obj-$(CPTCFG_DRM_MIPI_DBI) += drm_mipi_dbi.o
 obj-$(CPTCFG_DRM_MIPI_DSI) += drm_mipi_dsi.o
-drm_ukmd_panel_orientation_quirks-$(CPTCFG_DRM_PANEL_ORIENTATION_QUIRKS) += drm_panel_orientation_quirks.o
-obj-$(CPTCFG_DRM_PANEL_ORIENTATION_QUIRKS) += drm_ukmd_panel_orientation_quirks.o
+#drm_panel_orientation_quirks-$(CPTCFG_DRM_PANEL_ORIENTATION_QUIRKS) += drm_panel_orientation_quirks.o
+#obj-$(CPTCFG_DRM_PANEL_ORIENTATION_QUIRKS) += drm_panel_orientation_quirks.o
 obj-y			+= arm/
 obj-$(CPTCFG_DRM_TTM)	+= ttm/
 obj-$(CPTCFG_DRM_SCHED)	+= scheduler/

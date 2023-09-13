@@ -49,6 +49,7 @@
 #include "drm_internal.h"
 #include "drm_legacy.h"
 
+DEFINE_MUTEX(drm_global_mutex);
 /* from BKL pushdown */
 
 /**

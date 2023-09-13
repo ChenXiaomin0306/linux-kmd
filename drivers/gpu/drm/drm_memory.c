@@ -39,6 +39,9 @@
 #include <linux/vmalloc.h>
 #include <linux/overflow.h>
 #include <xen/xen.h>
+#ifndef BPM_CC_PLATFORM_H_NOT_PRESENT
+#include <linux/cc_platform.h>
+#endif
 
 #include <drm/drm_agpsupport.h>
 #include <drm/drm_cache.h>
@@ -179,7 +182,12 @@ bool drm_need_swiotlb(int dma_bits)
 	 * Enforce dma_alloc_coherent when memory encryption is active as well
 	 * for the same reasons as for Xen paravirtual hosts.
 	 */
-	if (mem_encrypt_active())
+#ifdef BPM_CC_PLATFORM_H_NOT_PRESENT
+        if (mem_encrypt_active())
+#else
+        if (cc_platform_has(CC_ATTR_MEM_ENCRYPT))
+#endif  /* BPM_CC_PLATFORM_H_NOT_PRESENT */
+
 		return true;
 
 	for (tmp = iomem_resource.child; tmp; tmp = tmp->sibling) {

@@ -1,0 +1,16 @@
+#ifndef BP_LINUX_BACKPORT_MACRO_H
+#define BP_LINUX_BACKPORT_MACRO_H
+#include <linux/version.h>
+#include <backport/autoconf.h>
+
+#if REDHAT_RELEASE_VERSION_IS_LESS(8,8)
+#define BPM_CC_PLATFORM_H_NOT_PRESENT
+#endif
+
+#if REDHAT_RELEASE_VERSION_IS_GEQ(8,8)
+#define BPM_BUS_REMOVE_FUNCTION_RETURN_TYPE_CHANGED
+#define INTEL_GMCH_GTT_RENAMED
+#define MEI_CONST_INPUT
+#endif
+
+#endif

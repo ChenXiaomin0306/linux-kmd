@@ -214,7 +214,11 @@ out:
  *
  * Return: written size in bytes or < 0 on error
  */
+#ifdef MEI_CONST_INPUT
+ssize_t mei_cldev_send(struct mei_cl_device *cldev, const u8 *buf, size_t length)
+#else
 ssize_t mei_cldev_send(struct mei_cl_device *cldev, u8 *buf, size_t length)
+#endif
 {
 	struct mei_cl *cl = cldev->cl;
 
@@ -466,7 +470,11 @@ EXPORT_SYMBOL_GPL(mei_cldev_ver);
  *
  * Return: true if me client is initialized and connected
  */
+#ifdef MEI_CONST_INPUT
+bool mei_cldev_enabled(const struct mei_cl_device *cldev)
+#else
 bool mei_cldev_enabled(struct mei_cl_device *cldev)
+#endif
 {
 	return mei_cl_is_connected(cldev->cl);
 }
@@ -729,8 +737,10 @@ static int mei_cl_device_probe(struct device *dev)
  * Return:  0 on success; < 0 otherwise
  */
 static int mei_cl_device_remove(struct device *dev)
+
 {
 	struct mei_cl_device *cldev = to_mei_cl_device(dev);
+
 	struct mei_cl_driver *cldrv;
 	int ret = 0;
 
@@ -739,14 +749,17 @@ static int mei_cl_device_remove(struct device *dev)
 
 	cldrv = to_mei_cl_driver(dev->driver);
 	if (cldrv->remove)
+#ifdef BPM_BUS_REMOVE_FUNCTION_RETURN_TYPE_CHANGED
+		cldrv->remove(cldev);
+#else
 		ret = cldrv->remove(cldev);
+#endif
 
 	mei_cldev_unregister_callbacks(cldev);
 
 	mei_cl_bus_module_put(cldev);
 	module_put(THIS_MODULE);
-
-	return ret;
+        return ret;
 }
 
 static ssize_t name_show(struct device *dev, struct device_attribute *a,

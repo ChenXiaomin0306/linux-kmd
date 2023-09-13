@@ -72,7 +72,6 @@ struct drm_conn_prop_enum_list {
 /*
  * Connector and encoder types.
  */
-#if 0
 static struct drm_conn_prop_enum_list drm_connector_enum_list[] = {
 	{ DRM_MODE_CONNECTOR_Unknown, "Unknown" },
 	{ DRM_MODE_CONNECTOR_VGA, "VGA" },
@@ -95,9 +94,6 @@ static struct drm_conn_prop_enum_list drm_connector_enum_list[] = {
 	{ DRM_MODE_CONNECTOR_WRITEBACK, "Writeback" },
 	{ DRM_MODE_CONNECTOR_SPI, "SPI" },
 };
-#endif
-extern struct drm_conn_prop_enum_list
-       drm_connector_enum_list[DRM_MODE_CONNECTOR_WRITEBACK + 1];
 
 void drm_connector_ida_init(void)
 {

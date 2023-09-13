@@ -11,6 +11,7 @@ NOSTDINC_FLAGS := \
 	-I$(M)/include/drm \
 	-I$(M)/include/uapi \
 	-include $(M)/backport-include/backport/backport.h \
+	-include $(M)/backport-include/backport/backport_macro.h \
 	$(call backport-cc-disable-warning, unused-but-set-variable) \
 	-DCPTCFG_VERSION=\"$(BACKPORTS_VERSION)\" \
 	-DCPTCFG_KERNEL_VERSION=\"$(BACKPORTED_KERNEL_VERSION)\" \
@@ -29,6 +30,7 @@ NOSTDINC_FLAGS := \
 	-I$(BACKPORT_DIR)/include/drm \
 	-I$(BACKPORT_DIR)/include/uapi \
 	-include $(BACKPORT_DIR)/backport-include/backport/backport.h \
+	-include $(BACKPORT_DIR)/backport-include/backport/backport_macro.h \
 	$(CFLAGS)
 endif
 

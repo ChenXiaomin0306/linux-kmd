@@ -6,6 +6,15 @@
 
 #include <linux/agp_backend.h>
 #include <linux/kernel.h>
+#ifdef INTEL_GMCH_GTT_RENAMED
+#define intel_gtt_get intel_gmch_gtt_get
+#define intel_enable_gtt intel_gmch_enable_gtt 
+#define intel_gtt_chipset_flush intel_gmch_gtt_flush 
+#define intel_gtt_insert_page intel_gmch_gtt_insert_page
+#define intel_gtt_insert_sg_entries intel_gmch_gtt_insert_sg_entries
+#define intel_gtt_clear_range intel_gmch_gtt_clear_range
+#endif
+
 
 void intel_gtt_get(u64 *gtt_total,
 		   phys_addr_t *mappable_base,

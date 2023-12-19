@@ -1717,7 +1717,7 @@ static void capture_gen(struct i915_gpu_coredump *error)
 
 	error->iommu = -1;
 #ifdef CONFIG_INTEL_IOMMU
-	error->iommu = intel_iommu_gfx_mapped;
+//	error->iommu = intel_iommu_gfx_mapped;
 #endif
 	error->reset_count = i915_reset_count(&i915->gpu_error);
 	error->suspend_count = i915->suspend_count;

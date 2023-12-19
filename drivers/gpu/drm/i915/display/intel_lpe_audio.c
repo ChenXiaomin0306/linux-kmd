@@ -302,7 +302,7 @@ void intel_lpe_audio_teardown(struct drm_i915_private *dev_priv)
 	if (!HAS_LPE_AUDIO(dev_priv))
 		return;
 
-	desc = irq_to_desc(dev_priv->lpe_audio.irq);
+	desc = irq_data_to_desc( irq_get_irq_data(dev_priv->lpe_audio.irq));
 
 	lpe_audio_platdev_destroy(dev_priv);
 

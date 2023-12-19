@@ -1,0 +1,3857 @@
+From 8032eae0b2c16768d4801b7a15087a442c4c67b6 Mon Sep 17 00:00:00 2001
+From: root <wenjuan.zhang@intel.com>
+Date: Tue, 19 Dec 2023 07:35:43 -0500
+Subject: [PATCH] backport to 5.14.0
+
+---
+ 0001-backport-to-5.14.0.patch                 | 1864 +++++++++++++++++
+ Makefile                                      |    2 +-
+ arch/x86/include/asm/intel-mid.h              |  130 --
+ backport-include/asm/intel-mid.h              |  151 --
+ backport-include/drm/drm.h                    |    2 +-
+ backport-include/trace/define_trace.h         |    8 +-
+ backport-include/trace/trace_events.h         |   99 +-
+ compat/backport-3.10.c                        |    4 +-
+ drivers/dma-buf/dma-resv.c                    |    4 +-
+ drivers/gpu/drm/Makefile                      |    5 +-
+ .../gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c  |    4 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c       |   10 +-
+ drivers/gpu/drm/amd/amdkfd/kfd_events.c       |    4 +-
+ drivers/gpu/drm/bridge/sil-sii8620.c          |    2 +-
+ drivers/gpu/drm/drm_drv.c                     |   11 -
+ drivers/gpu/drm/drm_edid.c                    |    2 +-
+ drivers/gpu/drm/drm_encoder_slave.c           |   10 +-
+ drivers/gpu/drm/drm_gem_shmem_helper.c        |    2 +
+ drivers/gpu/drm/drm_modes.c                   |    2 +-
+ drivers/gpu/drm/exynos/exynos_drm_dsi.c       |    6 +-
+ drivers/gpu/drm/i915/display/intel_display.c  |    4 +-
+ drivers/gpu/drm/i915/display/intel_fbc.c      |    2 +-
+ drivers/gpu/drm/i915/display/intel_hdmi.c     |   13 +-
+ .../gpu/drm/i915/display/intel_lpe_audio.c    |    2 +-
+ .../gpu/drm/i915/gem/i915_gem_execbuffer.c    |    2 +-
+ drivers/gpu/drm/i915/gem/i915_gem_mman.c      |    4 +-
+ drivers/gpu/drm/i915/gem/i915_gem_object.h    |    3 +-
+ drivers/gpu/drm/i915/gem/i915_gem_pages.c     |  197 +-
+ drivers/gpu/drm/i915/gem/i915_gem_shmem.c     |    4 +-
+ drivers/gpu/drm/i915/gem/i915_gem_userptr.c   |   37 +-
+ drivers/gpu/drm/i915/gt/intel_engine_user.c   |    2 +-
+ drivers/gpu/drm/i915/gt/intel_ggtt.c          |    4 +-
+ drivers/gpu/drm/i915/gt/intel_lrc.c           |    2 +-
+ drivers/gpu/drm/i915/gt/shmem_utils.c         |   58 +-
+ drivers/gpu/drm/i915/gt/uc/intel_uc_debugfs.c |   21 +-
+ drivers/gpu/drm/i915/gvt/debugfs.c            |    2 +-
+ drivers/gpu/drm/i915/i915_drv.h               |    6 +-
+ drivers/gpu/drm/i915/i915_gpu_error.c         |    2 +-
+ drivers/gpu/drm/i915/i915_ioc32.c             |   14 +-
+ drivers/gpu/drm/i915/i915_pmu.c               |    2 +-
+ drivers/gpu/drm/i915/intel_device_info.c      |    2 +-
+ drivers/gpu/drm/i915/intel_uncore.c           |    2 +-
+ drivers/gpu/drm/i915/selftests/i915_gem_gtt.c |    2 +-
+ drivers/gpu/drm/nouveau/nouveau_svm.c         |   20 +-
+ drivers/gpu/drm/radeon/radeon_cs.c            |    8 +-
+ drivers/gpu/drm/radeon/radeon_gem.c           |    6 +-
+ .../gpu/drm/rockchip/dw-mipi-dsi-rockchip.c   |    4 +-
+ drivers/gpu/drm/ttm/ttm_bo_vm.c               |    4 +-
+ drivers/misc/mei/bus.c                        |   13 +-
+ drivers/misc/mei/mei-gsc.mod                  |    2 +-
+ drivers/misc/mei/mei-me.mod                   |    2 +-
+ drivers/misc/mei/mei.mod                      |    2 +-
+ include/drm/intel-gtt.h                       |    2 +-
+ include/linux/seq_file.h                      |    2 +-
+ install_kmd.sh                                |    4 +-
+ 55 files changed, 2124 insertions(+), 654 deletions(-)
+ create mode 100644 0001-backport-to-5.14.0.patch
+ delete mode 100644 arch/x86/include/asm/intel-mid.h
+ delete mode 100644 backport-include/asm/intel-mid.h
+
+diff --git a/0001-backport-to-5.14.0.patch b/0001-backport-to-5.14.0.patch
+new file mode 100644
+index 00000000..6eae9b1e
+--- /dev/null
++++ b/0001-backport-to-5.14.0.patch
+@@ -0,0 +1,1864 @@
++From bd2bbd1098e3b9ddc932f68bae2f4f21a94f5555 Mon Sep 17 00:00:00 2001
++From: root <wenjuan.zhang@intel.com>
++Date: Tue, 19 Dec 2023 07:35:43 -0500
++Subject: [PATCH] backport to 5.14.0
++
++---
++ Makefile                                      |   2 +-
++ arch/x86/include/asm/intel-mid.h              | 130 ------------
++ backport-include/asm/intel-mid.h              | 151 --------------
++ backport-include/trace/define_trace.h         |   8 +-
++ backport-include/trace/trace_events.h         |  99 ++++-----
++ compat/backport-3.10.c                        |   4 +-
++ drivers/dma-buf/dma-resv.c                    |   4 +-
++ .../gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c  |   4 +-
++ drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c       |  10 +-
++ drivers/gpu/drm/amd/amdkfd/kfd_events.c       |   4 +-
++ drivers/gpu/drm/bridge/sil-sii8620.c          |   2 +-
++ drivers/gpu/drm/drm_drv.c                     |  11 -
++ drivers/gpu/drm/drm_edid.c                    |   2 +-
++ drivers/gpu/drm/drm_encoder_slave.c           |  10 +-
++ drivers/gpu/drm/drm_modes.c                   |   2 +-
++ drivers/gpu/drm/exynos/exynos_drm_dsi.c       |   6 +-
++ drivers/gpu/drm/i915/display/intel_display.c  |   4 +-
++ drivers/gpu/drm/i915/display/intel_fbc.c      |   2 +-
++ drivers/gpu/drm/i915/display/intel_hdmi.c     |  13 +-
++ .../gpu/drm/i915/display/intel_lpe_audio.c    |   2 +-
++ .../gpu/drm/i915/gem/i915_gem_execbuffer.c    |   2 +-
++ drivers/gpu/drm/i915/gem/i915_gem_mman.c      |   4 +-
++ drivers/gpu/drm/i915/gem/i915_gem_object.h    |   3 +-
++ drivers/gpu/drm/i915/gem/i915_gem_pages.c     | 197 +++++++-----------
++ drivers/gpu/drm/i915/gem/i915_gem_shmem.c     |   4 +-
++ drivers/gpu/drm/i915/gem/i915_gem_userptr.c   |  37 ++--
++ drivers/gpu/drm/i915/gt/intel_engine_user.c   |   2 +-
++ drivers/gpu/drm/i915/gt/intel_ggtt.c          |   4 +-
++ drivers/gpu/drm/i915/gt/intel_lrc.c           |   2 +-
++ drivers/gpu/drm/i915/gt/shmem_utils.c         |  58 ++----
++ drivers/gpu/drm/i915/gvt/debugfs.c            |   2 +-
++ drivers/gpu/drm/i915/i915_drv.h               |   6 +-
++ drivers/gpu/drm/i915/i915_gpu_error.c         |   2 +-
++ drivers/gpu/drm/i915/i915_ioc32.c             |  14 +-
++ drivers/gpu/drm/i915/i915_pmu.c               |   2 +-
++ drivers/gpu/drm/i915/intel_device_info.c      |   2 +-
++ drivers/gpu/drm/i915/intel_uncore.c           |   2 +-
++ drivers/gpu/drm/i915/selftests/i915_gem_gtt.c |   2 +-
++ drivers/gpu/drm/nouveau/nouveau_svm.c         |  20 +-
++ drivers/gpu/drm/radeon/radeon_cs.c            |   8 +-
++ drivers/gpu/drm/radeon/radeon_gem.c           |   6 +-
++ .../gpu/drm/rockchip/dw-mipi-dsi-rockchip.c   |   4 +-
++ drivers/gpu/drm/ttm/ttm_bo_vm.c               |   4 +-
++ drivers/misc/mei/bus.c                        |  13 +-
++ drivers/misc/mei/mei-gsc.mod                  |   2 +-
++ drivers/misc/mei/mei-me.mod                   |   2 +-
++ drivers/misc/mei/mei.mod                      |   2 +-
++ include/drm/intel-gtt.h                       |   2 +-
++ 48 files changed, 237 insertions(+), 641 deletions(-)
++ delete mode 100644 arch/x86/include/asm/intel-mid.h
++ delete mode 100644 backport-include/asm/intel-mid.h
++
++diff --git a/Makefile b/Makefile
++index f412c785..08d5e94b 100644
++--- a/Makefile
+++++ b/Makefile
++@@ -85,7 +85,7 @@ mrproper:
++ 			done								\
++ 		) > Kconfig.kernel							;\
++ 		kver=$$($(MAKE) --no-print-directory -C $(KLIB_BUILD) kernelversion |	\
++-			sed 's/^\(\([3-4]\|2\.6\)\.[0-9]\+\).*/\1/;t;d')		;\
+++			sed 's/^\(\([3-5]\|2\.6\)\.[0-9]\+\).*/\1/;t;d')		;\
++ 		test "$$kver" != "" || echo "Kernel version parse failed!"		;\
++ 		test "$$kver" != ""							;\
++ 		kvers="$$(seq 14 39 | sed 's/^/2.6./')"					;\
++diff --git a/arch/x86/include/asm/intel-mid.h b/arch/x86/include/asm/intel-mid.h
++deleted file mode 100644
++index 8e5af119..00000000
++--- a/arch/x86/include/asm/intel-mid.h
+++++ /dev/null
++@@ -1,130 +0,0 @@
++-/* SPDX-License-Identifier: GPL-2.0-only */
++-/*
++- * intel-mid.h: Intel MID specific setup code
++- *
++- * (C) Copyright 2009 Intel Corporation
++- */
++-#ifndef _ASM_X86_INTEL_MID_H
++-#define _ASM_X86_INTEL_MID_H
++-
++-#include <linux/sfi.h>
++-#include <linux/pci.h>
++-#include <linux/platform_device.h>
++-
++-extern int intel_mid_pci_init(void);
++-extern int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state);
++-extern pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev);
++-
++-extern void intel_mid_pwr_power_off(void);
++-
++-#define INTEL_MID_PWR_LSS_OFFSET	4
++-#define INTEL_MID_PWR_LSS_TYPE		(1 << 7)
++-
++-extern int intel_mid_pwr_get_lss_id(struct pci_dev *pdev);
++-
++-extern int get_gpio_by_name(const char *name);
++-extern int __init sfi_parse_mrtc(struct sfi_table_header *table);
++-extern int __init sfi_parse_mtmr(struct sfi_table_header *table);
++-extern int sfi_mrtc_num;
++-extern struct sfi_rtc_table_entry sfi_mrtc_array[];
++-
++-/*
++- * Here defines the array of devices platform data that IAFW would export
++- * through SFI "DEVS" table, we use name and type to match the device and
++- * its platform data.
++- */
++-struct devs_id {
++-	char name[SFI_NAME_LEN + 1];
++-	u8 type;
++-	u8 delay;
++-	u8 msic;
++-	void *(*get_platform_data)(void *info);
++-};
++-
++-#define sfi_device(i)								\
++-	static const struct devs_id *const __intel_mid_sfi_##i##_dev __used	\
++-	__attribute__((__section__(".x86_intel_mid_dev.init"))) = &i
++-
++-/**
++-* struct mid_sd_board_info - template for SD device creation
++-* @name:		identifies the driver
++-* @bus_num:		board-specific identifier for a given SD controller
++-* @max_clk:		the maximum frequency device supports
++-* @platform_data:	the particular data stored there is driver-specific
++-*/
++-struct mid_sd_board_info {
++-	char		name[SFI_NAME_LEN];
++-	int		bus_num;
++-	unsigned short	addr;
++-	u32		max_clk;
++-	void		*platform_data;
++-};
++-
++-/*
++- * Medfield is the follow-up of Moorestown, it combines two chip solution into
++- * one. Other than that it also added always-on and constant tsc and lapic
++- * timers. Medfield is the platform name, and the chip name is called Penwell
++- * we treat Medfield/Penwell as a variant of Moorestown. Penwell can be
++- * identified via MSRs.
++- */
++-enum intel_mid_cpu_type {
++-	/* 1 was Moorestown */
++-	INTEL_MID_CPU_CHIP_PENWELL = 2,
++-	INTEL_MID_CPU_CHIP_CLOVERVIEW,
++-	INTEL_MID_CPU_CHIP_TANGIER,
++-};
++-
++-extern enum intel_mid_cpu_type __intel_mid_cpu_chip;
++-
++-#ifdef CONFIG_X86_INTEL_MID
++-
++-static inline enum intel_mid_cpu_type intel_mid_identify_cpu(void)
++-{
++-	return __intel_mid_cpu_chip;
++-}
++-
++-static inline bool intel_mid_has_msic(void)
++-{
++-	return (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_PENWELL);
++-}
++-
++-#else /* !CONFIG_X86_INTEL_MID */
++-
++-#define intel_mid_identify_cpu()	0
++-#define intel_mid_has_msic()		0
++-
++-#endif /* !CONFIG_X86_INTEL_MID */
++-
++-enum intel_mid_timer_options {
++-	INTEL_MID_TIMER_DEFAULT,
++-	INTEL_MID_TIMER_APBT_ONLY,
++-	INTEL_MID_TIMER_LAPIC_APBT,
++-};
++-
++-extern enum intel_mid_timer_options intel_mid_timer_options;
++-
++-/* Bus Select SoC Fuse value */
++-#define BSEL_SOC_FUSE_MASK		0x7
++-/* FSB 133MHz */
++-#define BSEL_SOC_FUSE_001		0x1
++-/* FSB 100MHz */
++-#define BSEL_SOC_FUSE_101		0x5
++-/* FSB 83MHz */
++-#define BSEL_SOC_FUSE_111		0x7
++-
++-#define SFI_MTMR_MAX_NUM		8
++-#define SFI_MRTC_MAX			8
++-
++-extern void intel_scu_devices_create(void);
++-extern void intel_scu_devices_destroy(void);
++-
++-/* VRTC timer */
++-#define MRST_VRTC_MAP_SZ		1024
++-/* #define MRST_VRTC_PGOFFSET		0xc00 */
++-
++-extern void intel_mid_rtc_init(void);
++-
++-/* The offset for the mapping of global gpio pin to irq */
++-#define INTEL_MID_IRQ_OFFSET		0x100
++-
++-#endif /* _ASM_X86_INTEL_MID_H */
++diff --git a/backport-include/asm/intel-mid.h b/backport-include/asm/intel-mid.h
++deleted file mode 100644
++index 7c5af123..00000000
++--- a/backport-include/asm/intel-mid.h
+++++ /dev/null
++@@ -1,151 +0,0 @@
++-/*
++- * intel-mid.h: Intel MID specific setup code
++- *
++- * (C) Copyright 2009 Intel Corporation
++- *
++- * This program is free software; you can redistribute it and/or
++- * modify it under the terms of the GNU General Public License
++- * as published by the Free Software Foundation; version 2
++- * of the License.
++- */
++-#ifndef _ASM_X86_INTEL_MID_H
++-#define _ASM_X86_INTEL_MID_H
++-
++-#include <linux/sfi.h>
++-#include <linux/platform_device.h>
++-
++-extern int intel_mid_pci_init(void);
++-extern int get_gpio_by_name(const char *name);
++-extern void intel_scu_device_register(struct platform_device *pdev);
++-extern int __init sfi_parse_mrtc(struct sfi_table_header *table);
++-extern int __init sfi_parse_mtmr(struct sfi_table_header *table);
++-extern int sfi_mrtc_num;
++-extern struct sfi_rtc_table_entry sfi_mrtc_array[];
++-
++-/*
++- * Here defines the array of devices platform data that IAFW would export
++- * through SFI "DEVS" table, we use name and type to match the device and
++- * its platform data.
++- */
++-struct devs_id {
++-	char name[SFI_NAME_LEN + 1];
++-	u8 type;
++-	u8 delay;
++-	void *(*get_platform_data)(void *info);
++-	/* Custom handler for devices */
++-	void (*device_handler)(struct sfi_device_table_entry *pentry,
++-				struct devs_id *dev);
++-};
++-
++-#define sfi_device(i)   \
++-	static const struct devs_id *const __intel_mid_sfi_##i##_dev __used \
++-	__attribute__((__section__(".x86_intel_mid_dev.init"))) = &i
++-
++-/*
++- * Medfield is the follow-up of Moorestown, it combines two chip solution into
++- * one. Other than that it also added always-on and constant tsc and lapic
++- * timers. Medfield is the platform name, and the chip name is called Penwell
++- * we treat Medfield/Penwell as a variant of Moorestown. Penwell can be
++- * identified via MSRs.
++- */
++-enum intel_mid_cpu_type {
++-	/* 1 was Moorestown */
++-	INTEL_MID_CPU_CHIP_PENWELL = 2,
++-	INTEL_MID_CPU_CHIP_CLOVERVIEW,
++-	INTEL_MID_CPU_CHIP_TANGIER,
++-};
++-
++-extern enum intel_mid_cpu_type __intel_mid_cpu_chip;
++-
++-/**
++- * struct intel_mid_ops - Interface between intel-mid & sub archs
++- * @arch_setup: arch_setup function to re-initialize platform
++- *             structures (x86_init, x86_platform_init)
++- *
++- * This structure can be extended if any new interface is required
++- * between intel-mid & its sub arch files.
++- */
++-struct intel_mid_ops {
++-	void (*arch_setup)(void);
++-};
++-
++-/* Helper API's for INTEL_MID_OPS_INIT */
++-#define DECLARE_INTEL_MID_OPS_INIT(cpuname, cpuid)	\
++-				[cpuid] = get_##cpuname##_ops
++-
++-/* Maximum number of CPU ops */
++-#define MAX_CPU_OPS(a) (sizeof(a)/sizeof(void *))
++-
++-/*
++- * For every new cpu addition, a weak get_<cpuname>_ops() function needs be
++- * declared in arch/x86/platform/intel_mid/intel_mid_weak_decls.h.
++- */
++-#define INTEL_MID_OPS_INIT {\
++-	DECLARE_INTEL_MID_OPS_INIT(penwell, INTEL_MID_CPU_CHIP_PENWELL), \
++-	DECLARE_INTEL_MID_OPS_INIT(cloverview, INTEL_MID_CPU_CHIP_CLOVERVIEW), \
++-	DECLARE_INTEL_MID_OPS_INIT(tangier, INTEL_MID_CPU_CHIP_TANGIER) \
++-};
++-
++-#ifdef CONFIG_X86_INTEL_MID
++-
++-static inline enum intel_mid_cpu_type intel_mid_identify_cpu(void)
++-{
++-	return __intel_mid_cpu_chip;
++-}
++-
++-static inline bool intel_mid_has_msic(void)
++-{
++-	return (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_PENWELL);
++-}
++-
++-#else /* !CONFIG_X86_INTEL_MID */
++-
++-#define intel_mid_identify_cpu()    (0)
++-#define intel_mid_has_msic()    (0)
++-
++-#endif /* !CONFIG_X86_INTEL_MID */
++-
++-enum intel_mid_timer_options {
++-	INTEL_MID_TIMER_DEFAULT,
++-	INTEL_MID_TIMER_APBT_ONLY,
++-	INTEL_MID_TIMER_LAPIC_APBT,
++-};
++-
++-extern enum intel_mid_timer_options intel_mid_timer_options;
++-
++-/*
++- * Penwell uses spread spectrum clock, so the freq number is not exactly
++- * the same as reported by MSR based on SDM.
++- */
++-#define FSB_FREQ_83SKU	83200
++-#define FSB_FREQ_100SKU	99840
++-#define FSB_FREQ_133SKU	133000
++-
++-#define FSB_FREQ_167SKU	167000
++-#define FSB_FREQ_200SKU	200000
++-#define FSB_FREQ_267SKU	267000
++-#define FSB_FREQ_333SKU	333000
++-#define FSB_FREQ_400SKU	400000
++-
++-/* Bus Select SoC Fuse value */
++-#define BSEL_SOC_FUSE_MASK	0x7
++-#define BSEL_SOC_FUSE_001	0x1 /* FSB 133MHz */
++-#define BSEL_SOC_FUSE_101	0x5 /* FSB 100MHz */
++-#define BSEL_SOC_FUSE_111	0x7 /* FSB 83MHz */
++-
++-#define SFI_MTMR_MAX_NUM 8
++-#define SFI_MRTC_MAX	8
++-
++-extern void intel_scu_devices_create(void);
++-extern void intel_scu_devices_destroy(void);
++-
++-/* VRTC timer */
++-#define MRST_VRTC_MAP_SZ	(1024)
++-/*#define MRST_VRTC_PGOFFSET	(0xc00) */
++-
++-extern void intel_mid_rtc_init(void);
++-
++-/* the offset for the mapping of global gpio pin to irq */
++-#define INTEL_MID_IRQ_OFFSET 0x100
++-
++-#endif /* _ASM_X86_INTEL_MID_H */
++diff --git a/backport-include/trace/define_trace.h b/backport-include/trace/define_trace.h
++index cb30c553..723fce44 100644
++--- a/backport-include/trace/define_trace.h
+++++ b/backport-include/trace/define_trace.h
++@@ -25,7 +25,7 @@
++ 
++ #undef TRACE_EVENT
++ #define TRACE_EVENT(name, proto, args, tstruct, assign, print)	\
++-	DEFINE_TRACE(name)
+++	DEFINE_TRACE(name, PARAMS(proto), PARAMS(args))
++ 
++ #undef TRACE_EVENT_CONDITION
++ #define TRACE_EVENT_CONDITION(name, proto, args, cond, tstruct, assign, print) \
++@@ -48,7 +48,7 @@
++ 
++ #undef DEFINE_EVENT
++ #define DEFINE_EVENT(template, name, proto, args) \
++-	DEFINE_TRACE(name)
+++	DEFINE_TRACE(name, PARAMS(proto), PARAMS(args))
++ 
++ #undef DEFINE_EVENT_FN
++ #define DEFINE_EVENT_FN(template, name, proto, args, reg, unreg) \
++@@ -56,7 +56,7 @@
++ 
++ #undef DEFINE_EVENT_PRINT
++ #define DEFINE_EVENT_PRINT(template, name, proto, args, print)	\
++-	DEFINE_TRACE(name)
+++	DEFINE_TRACE(name, PARAMS(proto), PARAMS(args))
++ 
++ #undef DEFINE_EVENT_CONDITION
++ #define DEFINE_EVENT_CONDITION(template, name, proto, args, cond) \
++@@ -64,7 +64,7 @@
++ 
++ #undef DECLARE_TRACE
++ #define DECLARE_TRACE(name, proto, args)	\
++-	DEFINE_TRACE(name)
+++	DEFINE_TRACE(name, PARAMS(proto), PARAMS(args))
++ 
++ #undef TRACE_INCLUDE
++ #undef __TRACE_INCLUDE
++diff --git a/backport-include/trace/trace_events.h b/backport-include/trace/trace_events.h
++index 4ecdfe2e..859e1302 100644
++--- a/backport-include/trace/trace_events.h
+++++ b/backport-include/trace/trace_events.h
++@@ -2,7 +2,8 @@
++ /*
++  * Stage 1 of the trace events.
++  *
++- * Override the macros in <trace/trace_events.h> to include the following:
+++ * Override the macros in the event tracepoint header <trace/events/XXX.h>
+++ * to include the following:
++  *
++  * struct trace_event_raw_<call> {
++  *	struct trace_entry		ent;
++@@ -209,8 +210,7 @@ TRACE_MAKE_SYSTEM_STR();
++ #define DEFINE_EVENT(template, name, proto, args)
++ 
++ #undef DEFINE_EVENT_PRINT
++-#define DEFINE_EVENT_PRINT(template, name, proto, args, print)	\
++-	DEFINE_EVENT(template, name, PARAMS(proto), PARAMS(args))
+++#define DEFINE_EVENT_PRINT(template, name, proto, args, print)
++ 
++ #undef TRACE_EVENT_FLAGS
++ #define TRACE_EVENT_FLAGS(event, flag)
++@@ -223,7 +223,8 @@ TRACE_MAKE_SYSTEM_STR();
++ /*
++  * Stage 3 of the trace events.
++  *
++- * Override the macros in <trace/trace_events.h> to include the following:
+++ * Override the macros in the event tracepoint header <trace/events/XXX.h>
+++ * to include the following:
++  *
++  * enum print_line_t
++  * trace_raw_output_<call>(struct trace_iterator *iter, int flags)
++@@ -340,6 +341,12 @@ TRACE_MAKE_SYSTEM_STR();
++ 		trace_print_array_seq(p, array, count, el_size);	\
++ 	})
++ 
+++#undef __print_hex_dump
+++#define __print_hex_dump(prefix_str, prefix_type,			\
+++			 rowsize, groupsize, buf, len, ascii)		\
+++	trace_print_hex_dump_seq(p, prefix_str, prefix_type,		\
+++				 rowsize, groupsize, buf, len, ascii)
+++
++ #undef DECLARE_EVENT_CLASS
++ #define DECLARE_EVENT_CLASS(call, proto, args, tstruct, assign, print)	\
++ static notrace enum print_line_t					\
++@@ -394,22 +401,16 @@ static struct trace_event_functions trace_event_type_funcs_##call = {	\
++ #include TRACE_INCLUDE(TRACE_INCLUDE_FILE)
++ 
++ #undef __field_ext
++-#define __field_ext(type, item, filter_type)				\
++-	ret = trace_define_field(event_call, #type, #item,		\
++-				 offsetof(typeof(field), item),		\
++-				 sizeof(field.item),			\
++-				 is_signed_type(type), filter_type);	\
++-	if (ret)							\
++-		return ret;
+++#define __field_ext(_type, _item, _filter_type) {			\
+++	.type = #_type, .name = #_item,					\
+++	.size = sizeof(_type), .align = __alignof__(_type),		\
+++	.is_signed = is_signed_type(_type), .filter_type = _filter_type },
++ 
++ #undef __field_struct_ext
++-#define __field_struct_ext(type, item, filter_type)			\
++-	ret = trace_define_field(event_call, #type, #item,		\
++-				 offsetof(typeof(field), item),		\
++-				 sizeof(field.item),			\
++-				 0, filter_type);			\
++-	if (ret)							\
++-		return ret;
+++#define __field_struct_ext(_type, _item, _filter_type) {		\
+++	.type = #_type, .name = #_item,					\
+++	.size = sizeof(_type), .align = __alignof__(_type),		\
+++	0, .filter_type = _filter_type },
++ 
++ #undef __field
++ #define __field(type, item)	__field_ext(type, item, FILTER_OTHER)
++@@ -418,25 +419,16 @@ static struct trace_event_functions trace_event_type_funcs_##call = {	\
++ #define __field_struct(type, item) __field_struct_ext(type, item, FILTER_OTHER)
++ 
++ #undef __array
++-#define __array(type, item, len)					\
++-	do {								\
++-		char *type_str = #type"["__stringify(len)"]";		\
++-		BUILD_BUG_ON(len > MAX_FILTER_STR_VAL);			\
++-		BUILD_BUG_ON(len <= 0);					\
++-		ret = trace_define_field(event_call, type_str, #item,	\
++-				 offsetof(typeof(field), item),		\
++-				 sizeof(field.item),			\
++-				 is_signed_type(type), FILTER_OTHER);	\
++-		if (ret)						\
++-			return ret;					\
++-	} while (0);
+++#define __array(_type, _item, _len) {					\
+++	.type = #_type"["__stringify(_len)"]", .name = #_item,		\
+++	.size = sizeof(_type[_len]), .align = __alignof__(_type),	\
+++	.is_signed = is_signed_type(_type), .filter_type = FILTER_OTHER },
++ 
++ #undef __dynamic_array
++-#define __dynamic_array(type, item, len)				       \
++-	ret = trace_define_field(event_call, "__data_loc " #type "[]", #item,  \
++-				 offsetof(typeof(field), __data_loc_##item),   \
++-				 sizeof(field.__data_loc_##item),	       \
++-				 is_signed_type(type), FILTER_OTHER);
+++#define __dynamic_array(_type, _item, _len) {				\
+++	.type = "__data_loc " #_type "[]", .name = #_item,		\
+++	.size = 4, .align = 4,						\
+++	.is_signed = is_signed_type(_type), .filter_type = FILTER_OTHER },
++ 
++ #undef __string
++ #define __string(item, src) __dynamic_array(char, item, -1)
++@@ -446,23 +438,12 @@ static struct trace_event_functions trace_event_type_funcs_##call = {	\
++ 
++ #undef DECLARE_EVENT_CLASS
++ #define DECLARE_EVENT_CLASS(call, proto, args, tstruct, func, print)	\
++-static int notrace __init						\
++-trace_event_define_fields_##call(struct trace_event_call *event_call)	\
++-{									\
++-	struct trace_event_raw_##call field;				\
++-	int ret;							\
++-									\
++-	tstruct;							\
++-									\
++-	return ret;							\
++-}
++-
++-#undef DEFINE_EVENT
++-#define DEFINE_EVENT(template, name, proto, args)
+++static struct trace_event_fields trace_event_fields_##call[] = {	\
+++	tstruct								\
+++	{} };
++ 
++ #undef DEFINE_EVENT_PRINT
++-#define DEFINE_EVENT_PRINT(template, name, proto, args, print)	\
++-	DEFINE_EVENT(template, name, PARAMS(proto), PARAMS(args))
+++#define DEFINE_EVENT_PRINT(template, name, proto, args, print)
++ 
++ #include TRACE_INCLUDE(TRACE_INCLUDE_FILE)
++ 
++@@ -537,19 +518,12 @@ static inline notrace int trace_event_get_offsets_##call(		\
++ 	return __data_size;						\
++ }
++ 
++-#undef DEFINE_EVENT
++-#define DEFINE_EVENT(template, name, proto, args)
++-
++-#undef DEFINE_EVENT_PRINT
++-#define DEFINE_EVENT_PRINT(template, name, proto, args, print)	\
++-	DEFINE_EVENT(template, name, PARAMS(proto), PARAMS(args))
++-
++ #include TRACE_INCLUDE(TRACE_INCLUDE_FILE)
++ 
++ /*
++  * Stage 4 of the trace events.
++  *
++- * Override the macros in <trace/trace_events.h> to include the following:
+++ * Override the macros in the event tracepoint header <trace/events/XXX.h>
++  *
++  * For those macros defined with TRACE_EVENT:
++  *
++@@ -564,7 +538,7 @@ static inline notrace int trace_event_get_offsets_##call(		\
++  *	enum event_trigger_type __tt = ETT_NONE;
++  *	struct ring_buffer_event *event;
++  *	struct trace_event_raw_<call> *entry; <-- defined in stage 1
++- *	struct ring_buffer *buffer;
+++ *	struct trace_buffer *buffer;
++  *	unsigned long irq_flags;
++  *	int __data_size;
++  *	int pc;
++@@ -613,7 +587,7 @@ static inline notrace int trace_event_get_offsets_##call(		\
++  *
++  * static struct trace_event_class __used event_class_<template> = {
++  *	.system			= "<system>",
++- *	.define_fields		= trace_event_define_fields_<call>,
+++ *	.fields_array		= trace_event_fields_<call>,
++  *	.fields			= LIST_HEAD_INIT(event_class_##call.fields),
++  *	.raw_init		= trace_event_raw_init,
++  *	.probe			= trace_event_raw_event_##call,
++@@ -734,9 +708,6 @@ static inline void ftrace_test_probe_##call(void)			\
++ 	check_trace_callback_type_##call(trace_event_raw_event_##template); \
++ }
++ 
++-#undef DEFINE_EVENT_PRINT
++-#define DEFINE_EVENT_PRINT(template, name, proto, args, print)
++-
++ #include TRACE_INCLUDE(TRACE_INCLUDE_FILE)
++ 
++ #undef __entry
++@@ -761,7 +732,7 @@ _TRACE_PERF_PROTO(call, PARAMS(proto));					\
++ static char print_fmt_##call[] = print;					\
++ static struct trace_event_class __used __refdata event_class_##call = { \
++ 	.system			= TRACE_SYSTEM_STRING,			\
++-	.define_fields		= trace_event_define_fields_##call,	\
+++	.fields_array		= trace_event_fields_##call,		\
++ 	.fields			= LIST_HEAD_INIT(event_class_##call.fields),\
++ 	.raw_init		= trace_event_raw_init,			\
++ 	.probe			= trace_event_raw_event_##call,		\
++diff --git a/compat/backport-3.10.c b/compat/backport-3.10.c
++index 8ee2bdb8..d6b1cda5 100644
++--- a/compat/backport-3.10.c
+++++ b/compat/backport-3.10.c
++@@ -105,7 +105,7 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
++  * 		 		 		 		 */
++ 		*locked = 1;
++ 		lock_dropped = true;
++-		down_read(&mm->mmap_sem);
+++		mmap_read_lock(mm);
++ 		ret = __get_user_pages(tsk, mm, start, 1, flags | FOLL_TRIED,
++ 				       pages, NULL, NULL);
++ 		if (ret != 1) {
++@@ -126,7 +126,7 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
++  * 		 * We must let the caller know we temporarily dropped the lock
++  * 		 		 * and so the critical section protected by it was lost.
++  * 		 		 		 */
++-		up_read(&mm->mmap_sem);
+++		mmap_read_unlock(mm);
++ 		*locked = 0;
++ 	}
++ 	return pages_done;
++diff --git a/drivers/dma-buf/dma-resv.c b/drivers/dma-buf/dma-resv.c
++index 4264e647..e53f7b49 100644
++--- a/drivers/dma-buf/dma-resv.c
+++++ b/drivers/dma-buf/dma-resv.c
++@@ -109,7 +109,7 @@ static int __init dma_resv_lockdep(void)
++ 
++ 	dma_resv_init(&obj);
++ 
++-	down_read(&mm->mmap_sem);
+++	mmap_read_lock(mm);
++ 	ww_acquire_init(&ctx, &reservation_ww_class);
++ 	ret = dma_resv_lock(&obj, &ctx);
++ 	if (ret == -EDEADLK)
++@@ -118,7 +118,7 @@ static int __init dma_resv_lockdep(void)
++ 	fs_reclaim_release(GFP_KERNEL);
++ 	ww_mutex_unlock(&obj.lock);
++ 	ww_acquire_fini(&ctx);
++-	up_read(&mm->mmap_sem);
+++	mmap_read_unlock(mm);
++ 	
++ 	mmput(mm);
++ 
++diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c
++index b2487f4f..caffb229 100644
++--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c
+++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c
++@@ -1343,9 +1343,9 @@ int amdgpu_amdkfd_gpuvm_map_memory_to_gpu(
++ 	 * concurrently and the queues are actually stopped
++ 	 */
++ 	if (amdgpu_ttm_tt_get_usermm(bo->tbo.ttm)) {
++-		down_write(&current->mm->mmap_sem);
+++		mmap_write_lock(current->mm);
++ 		is_invalid_userptr = atomic_read(&mem->invalid);
++-		up_write(&current->mm->mmap_sem);
+++		mmap_write_unlock(current->mm);
++ 	}
++ 
++ 	mutex_lock(&mem->lock);
++diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
++index a6e3560c..cb573e34 100644
++--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
+++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
++@@ -838,7 +838,7 @@ int amdgpu_ttm_tt_get_user_pages(struct amdgpu_bo *bo, struct page **pages)
++ 		goto out_free_ranges;
++ 	}
++ 
++-	down_read(&mm->mmap_sem);
+++	mmap_read_lock(mm);
++ 	vma = find_vma(mm, start);
++ 	if (unlikely(!vma || start < vma->vm_start)) {
++ 		r = -EFAULT;
++@@ -849,15 +849,15 @@ int amdgpu_ttm_tt_get_user_pages(struct amdgpu_bo *bo, struct page **pages)
++ 		r = -EPERM;
++ 		goto out_unlock;
++ 	}
++-	up_read(&mm->mmap_sem);
+++	mmap_read_unlock(mm);
++ 	timeout = jiffies + msecs_to_jiffies(HMM_RANGE_DEFAULT_TIMEOUT);
++ 
++ retry:
++ 	range->notifier_seq = mmu_interval_read_begin(&bo->notifier);
++ 
++-	down_read(&mm->mmap_sem);
+++	mmap_read_lock(mm);
++ 	r = hmm_range_fault(range, 0);
++-	up_read(&mm->mmap_sem);
+++	mmap_read_unlock(mm);
++ 	if (unlikely(r <= 0)) {
++ 		/*
++ 		 * FIXME: This timeout should encompass the retry from
++@@ -886,7 +886,7 @@ retry:
++ 	return 0;
++ 
++ out_unlock:
++-	up_read(&mm->mmap_sem);
+++	mmap_read_unlock(mm);
++ out_free_pfns:
++ 	kvfree(range->pfns);
++ out_free_ranges:
++diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_events.c b/drivers/gpu/drm/amd/amdkfd/kfd_events.c
++index 1f836557..ee474a19 100644
++--- a/drivers/gpu/drm/amd/amdkfd/kfd_events.c
+++++ b/drivers/gpu/drm/amd/amdkfd/kfd_events.c
++@@ -901,7 +901,7 @@ void kfd_signal_iommu_event(struct kfd_dev *dev, unsigned int pasid,
++ 
++ 	memset(&memory_exception_data, 0, sizeof(memory_exception_data));
++ 
++-	down_read(&mm->mmap_sem);
+++	mmap_read_lock(mm);
++ 	vma = find_vma(mm, address);
++ 
++ 	memory_exception_data.gpu_id = dev->id;
++@@ -924,7 +924,7 @@ void kfd_signal_iommu_event(struct kfd_dev *dev, unsigned int pasid,
++ 			memory_exception_data.failure.NoExecute = 0;
++ 	}
++ 
++-	up_read(&mm->mmap_sem);
+++	mmap_read_unlock(mm);
++ 	mmput(mm);
++ 
++ 	pr_debug("notpresent %d, noexecute %d, readonly %d\n",
++diff --git a/drivers/gpu/drm/bridge/sil-sii8620.c b/drivers/gpu/drm/bridge/sil-sii8620.c
++index 4c0eef40..f7c6f2b2 100644
++--- a/drivers/gpu/drm/bridge/sil-sii8620.c
+++++ b/drivers/gpu/drm/bridge/sil-sii8620.c
++@@ -986,7 +986,7 @@ static void sii8620_set_auto_zone(struct sii8620 *ctx)
++ 
++ static void sii8620_stop_video(struct sii8620 *ctx)
++ {
++-	u8 uninitialized_var(val);
+++	u8 val;
++ 
++ 	sii8620_write_seq_static(ctx,
++ 		REG_TPI_INTR_EN, 0,
++diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
++index cf334470..394c6c28 100644
++--- a/drivers/gpu/drm/drm_drv.c
+++++ b/drivers/gpu/drm/drm_drv.c
++@@ -523,17 +523,6 @@ static int drm_fs_init_fs_context(struct fs_context *fc)
++ 	return init_pseudo(fc, 0x010203ff) ? 0 : -ENOMEM;
++ }
++ 
++-
++-
++-static const struct dentry_operations drm_fs_dops = {
++-        .d_dname        = simple_dname,
++-};
++-
++-static const struct super_operations drm_fs_sops = {
++-        .statfs         = simple_statfs,
++-};
++-
++-
++ static struct file_system_type drm_fs_type = {
++ 	.name		= "drm",
++ 	.owner		= THIS_MODULE,
++diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
++index 92dcff30..630160dd 100644
++--- a/drivers/gpu/drm/drm_edid.c
+++++ b/drivers/gpu/drm/drm_edid.c
++@@ -3047,7 +3047,7 @@ static int drm_cvt_modes(struct drm_connector *connector,
++ 	const u8 empty[3] = { 0, 0, 0 };
++ 
++ 	for (i = 0; i < 4; i++) {
++-		int uninitialized_var(width), height;
+++		int width, height;
++ 		cvt = &(timing->data.other_data.data.cvt[i]);
++ 
++ 		if (!memcmp(cvt->code, empty, 3))
++diff --git a/drivers/gpu/drm/drm_encoder_slave.c b/drivers/gpu/drm/drm_encoder_slave.c
++index cf804389..7d2c7302 100644
++--- a/drivers/gpu/drm/drm_encoder_slave.c
+++++ b/drivers/gpu/drm/drm_encoder_slave.c
++@@ -61,13 +61,8 @@ int drm_i2c_encoder_init(struct drm_device *dev,
++ 
++ 	request_module("%s%s", I2C_MODULE_PREFIX, info->type);
++ 
++-	client = i2c_new_device(adap, info);
++-	if (!client) {
++-		err = -ENOMEM;
++-		goto fail;
++-	}
++-
++-	if (!client->dev.driver) {
+++	client = i2c_new_client_device(adap, info);
+++	if (!i2c_client_has_driver(client)) {
++ 		err = -ENODEV;
++ 		goto fail_unregister;
++ 	}
++@@ -95,7 +90,6 @@ int drm_i2c_encoder_init(struct drm_device *dev,
++ fail_unregister:
++ 	i2c_unregister_device(client);
++ 	module_put(module);
++-fail:
++ 	return err;
++ }
++ EXPORT_SYMBOL(drm_i2c_encoder_init);
++diff --git a/drivers/gpu/drm/drm_modes.c b/drivers/gpu/drm/drm_modes.c
++index 10336b14..c9a6f98d 100644
++--- a/drivers/gpu/drm/drm_modes.c
+++++ b/drivers/gpu/drm/drm_modes.c
++@@ -1320,7 +1320,7 @@ EXPORT_SYMBOL(drm_mode_prune_invalid);
++  * Negative if @lh_a is better than @lh_b, zero if they're equivalent, or
++  * positive if @lh_b is better than @lh_a.
++  */
++-static int drm_mode_compare(void *priv, struct list_head *lh_a, struct list_head *lh_b)
+++static int drm_mode_compare(void *priv, const struct list_head *lh_a,const struct list_head *lh_b)
++ {
++ 	struct drm_display_mode *a = list_entry(lh_a, struct drm_display_mode, head);
++ 	struct drm_display_mode *b = list_entry(lh_b, struct drm_display_mode, head);
++diff --git a/drivers/gpu/drm/exynos/exynos_drm_dsi.c b/drivers/gpu/drm/exynos/exynos_drm_dsi.c
++index 33628d85..5000ec7f 100644
++--- a/drivers/gpu/drm/exynos/exynos_drm_dsi.c
+++++ b/drivers/gpu/drm/exynos/exynos_drm_dsi.c
++@@ -546,9 +546,9 @@ static unsigned long exynos_dsi_pll_find_pms(struct exynos_dsi *dsi,
++ 	unsigned long best_freq = 0;
++ 	u32 min_delta = 0xffffffff;
++ 	u8 p_min, p_max;
++-	u8 _p, uninitialized_var(best_p);
++-	u16 _m, uninitialized_var(best_m);
++-	u8 _s, uninitialized_var(best_s);
+++	u8 _p, best_p;
+++	u16 _m, best_m;
+++	u8 _s, best_s;
++ 
++ 	p_min = DIV_ROUND_UP(fin, (12 * MHZ));
++ 	p_max = fin / (6 * MHZ);
++diff --git a/drivers/gpu/drm/i915/display/intel_display.c b/drivers/gpu/drm/i915/display/intel_display.c
++index b3de21a0..f826df18 100644
++--- a/drivers/gpu/drm/i915/display/intel_display.c
+++++ b/drivers/gpu/drm/i915/display/intel_display.c
++@@ -26,7 +26,7 @@
++ 
++ #include <linux/i2c.h>
++ #include <linux/input.h>
++-#include <linux/intel-iommu.h>
+++//#include <linux/intel-iommu.h>
++ #include <linux/kernel.h>
++ #include <linux/module.h>
++ #include <linux/dma-resv.h>
++@@ -15511,7 +15511,7 @@ static void intel_crtc_enable_trans_port_sync(struct intel_crtc *crtc,
++ static void intel_set_dp_tp_ctl_normal(struct intel_crtc *crtc,
++ 				       struct intel_atomic_state *state)
++ {
++-	struct drm_connector *uninitialized_var(conn);
+++	struct drm_connector *conn;
++ 	struct drm_connector_state *conn_state;
++ 	struct intel_dp *intel_dp;
++ 	int i;
++diff --git a/drivers/gpu/drm/i915/display/intel_fbc.c b/drivers/gpu/drm/i915/display/intel_fbc.c
++index f02308f6..5f91aeaa 100644
++--- a/drivers/gpu/drm/i915/display/intel_fbc.c
+++++ b/drivers/gpu/drm/i915/display/intel_fbc.c
++@@ -466,7 +466,7 @@ static int intel_fbc_alloc_cfb(struct drm_i915_private *dev_priv,
++ {
++ 	struct intel_memory_region *mem = i915_stolen_region(dev_priv);
++ 	struct intel_fbc *fbc = &dev_priv->fbc;
++-	struct drm_mm_node *uninitialized_var(compressed_llb);
+++	struct drm_mm_node *compressed_llb;
++ 	int ret;
++ 
++ 	drm_WARN_ON(&dev_priv->drm,
++diff --git a/drivers/gpu/drm/i915/display/intel_hdmi.c b/drivers/gpu/drm/i915/display/intel_hdmi.c
++index 3bf8e54b..5a257b93 100644
++--- a/drivers/gpu/drm/i915/display/intel_hdmi.c
+++++ b/drivers/gpu/drm/i915/display/intel_hdmi.c
++@@ -2869,8 +2869,8 @@ intel_hdmi_connector_register(struct drm_connector *connector)
++ static void intel_hdmi_destroy(struct drm_connector *connector)
++ {
++ 	struct cec_notifier *n = intel_attached_hdmi(to_intel_connector(connector))->cec_notifier;
++-	if(n)
++-		cec_notifier_put(n);
+++
+++	cec_notifier_conn_unregister(n);
++ 
++ 	intel_connector_destroy(connector);
++ }
++@@ -3214,7 +3214,8 @@ void intel_hdmi_init_connector(struct intel_digital_port *intel_dig_port,
++ 	struct drm_i915_private *dev_priv = to_i915(dev);
++ 	struct i2c_adapter *ddc;
++ 	enum port port = intel_encoder->port;
++-
+++	struct cec_connector_info conn_info;
+++	
++ 	drm_dbg_kms(&dev_priv->drm,
++ 		    "Adding HDMI connector on [ENCODER:%d:%s]\n",
++ 		    intel_encoder->base.base.id, intel_encoder->base.name);
++@@ -3274,7 +3275,11 @@ void intel_hdmi_init_connector(struct intel_digital_port *intel_dig_port,
++ 		               (temp & ~0xf) | 0xd);
++ 	}
++ 
++-	intel_hdmi->cec_notifier = cec_notifier_get(dev->dev);
+++	cec_fill_conn_info_from_drm(&conn_info, connector);
+++
+++	intel_hdmi->cec_notifier =
+++		cec_notifier_conn_register(dev->dev, port_identifier(port),
+++					   &conn_info);
++ 	if (!intel_hdmi->cec_notifier)
++ 		drm_dbg_kms(&dev_priv->drm, "CEC notifier get failed\n");
++ }
++diff --git a/drivers/gpu/drm/i915/display/intel_lpe_audio.c b/drivers/gpu/drm/i915/display/intel_lpe_audio.c
++index ad5cc130..6a235ca9 100644
++--- a/drivers/gpu/drm/i915/display/intel_lpe_audio.c
+++++ b/drivers/gpu/drm/i915/display/intel_lpe_audio.c
++@@ -302,7 +302,7 @@ void intel_lpe_audio_teardown(struct drm_i915_private *dev_priv)
++ 	if (!HAS_LPE_AUDIO(dev_priv))
++ 		return;
++ 
++-	desc = irq_to_desc(dev_priv->lpe_audio.irq);
+++	desc = irq_data_to_desc( irq_get_irq_data(dev_priv->lpe_audio.irq));
++ 
++ 	lpe_audio_platdev_destroy(dev_priv);
++ 
++diff --git a/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c b/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
++index 46998372..9a19fb2e 100644
++--- a/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
+++++ b/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
++@@ -4,7 +4,7 @@
++  * Copyright © 2008,2010 Intel Corporation
++  */
++ 
++-#include <linux/intel-iommu.h>
+++//#include <linux/intel-iommu.h>
++ #include <linux/dma-resv.h>
++ #include <linux/sync_file.h>
++ #include <linux/uaccess.h>
++diff --git a/drivers/gpu/drm/i915/gem/i915_gem_mman.c b/drivers/gpu/drm/i915/gem/i915_gem_mman.c
++index c422ca5d..f678d813 100644
++--- a/drivers/gpu/drm/i915/gem/i915_gem_mman.c
+++++ b/drivers/gpu/drm/i915/gem/i915_gem_mman.c
++@@ -93,7 +93,7 @@ i915_gem_mmap_ioctl(struct drm_device *dev, void *data,
++ 		struct mm_struct *mm = current->mm;
++ 		struct vm_area_struct *vma;
++ 
++-		if (down_write_killable(&mm->mmap_sem)) {
+++		if (mmap_write_lock_killable(mm)) {
++ 			addr = -EINTR;
++ 			goto err;
++ 		}
++@@ -103,7 +103,7 @@ i915_gem_mmap_ioctl(struct drm_device *dev, void *data,
++ 				pgprot_writecombine(vm_get_page_prot(vma->vm_flags));
++ 		else
++ 			addr = -ENOMEM;
++-		up_write(&mm->mmap_sem);
+++		mmap_write_unlock(mm);
++ 		if (IS_ERR_VALUE(addr))
++ 			goto err;
++ 	}
++diff --git a/drivers/gpu/drm/i915/gem/i915_gem_object.h b/drivers/gpu/drm/i915/gem/i915_gem_object.h
++index 8304eb7c..2b184a9e 100644
++--- a/drivers/gpu/drm/i915/gem/i915_gem_object.h
+++++ b/drivers/gpu/drm/i915/gem/i915_gem_object.h
++@@ -391,8 +391,7 @@ enum i915_map_type {
++  */
++ void *__must_check i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
++ 					   enum i915_map_type type);
++-void *__must_check i915_gem_object_try_pin_map(struct drm_i915_gem_object *obj,
++-					       enum i915_map_type type);
+++
++ 
++ void __i915_gem_object_flush_map(struct drm_i915_gem_object *obj,
++ 				 unsigned long offset,
++diff --git a/drivers/gpu/drm/i915/gem/i915_gem_pages.c b/drivers/gpu/drm/i915/gem/i915_gem_pages.c
++index 1dd361db..77457cca 100644
++--- a/drivers/gpu/drm/i915/gem/i915_gem_pages.c
+++++ b/drivers/gpu/drm/i915/gem/i915_gem_pages.c
++@@ -278,53 +278,41 @@ int __i915_gem_object_put_pages(struct drm_i915_gem_object *obj)
++ 	return err;
++ }
++ 
++-static inline pte_t iomap_pte(resource_size_t base,
++-			      dma_addr_t offset,
++-			      pgprot_t prot)
++-{
++-	return pte_mkspecial(pfn_pte((base + offset) >> PAGE_SHIFT, prot));
++-}
++ 
++ /* The 'mapping' part of i915_gem_object_pin_map() below */
++-static void *i915_gem_object_map(struct drm_i915_gem_object *obj,
++-				 enum i915_map_type type)
+++static void *i915_gem_object_map_page(struct drm_i915_gem_object *obj,
+++		enum i915_map_type type)
++ {
++-	unsigned long n_pte = obj->base.size >> PAGE_SHIFT;
++-	struct sg_table *sgt = obj->mm.pages;
++-	pte_t *stack[32], **mem;
++-	struct vm_struct *area;
+++	unsigned long n_pages = obj->base.size >> PAGE_SHIFT, i;
+++	struct page *stack[32], **pages = stack, *page;
+++	struct sgt_iter iter;
++ 	pgprot_t pgprot;
++-
++-	/* FIXME: Objects in LMEM are expected to mapped WC type. */
++-	WARN_ON (!i915_gem_object_has_struct_page(obj) && type != I915_MAP_WC);
++-
++-	if (!i915_gem_object_has_struct_page(obj) && type != I915_MAP_WC)
++-		return NULL;
++-
++-	/* A single page can always be kmapped */
++-	if (n_pte == 1 && type == I915_MAP_WB)
++-		return kmap(sg_page(sgt->sgl));
++-
++-	mem = stack;
++-	if (n_pte > ARRAY_SIZE(stack)) {
++-		/* Too big for stack -- allocate temporary array instead */
++-		mem = kvmalloc_array(n_pte, sizeof(*mem), GFP_KERNEL);
++-		if (!mem)
++-			return NULL;
++-	}
++-
++-	area = alloc_vm_area(obj->base.size, mem);
++-	if (!area) {
++-		if (mem != stack)
++-			kvfree(mem);
++-		return NULL;
++-	}
+++	void *vaddr;
++ 
++ 	switch (type) {
++ 	default:
++ 		MISSING_CASE(type);
++-		/* fallthrough - to use PAGE_KERNEL anyway */
+++		fallthrough;	/* to use PAGE_KERNEL anyway */
++ 	case I915_MAP_WB:
+++		/*
+++		 * On 32b, highmem using a finite set of indirect PTE (i.e.
+++		 * vmap) to provide virtual mappings of the high pages.
+++		 * As these are finite, map_new_virtual() must wait for some
+++		 * other kmap() to finish when it runs out. If we map a large
+++		 * number of objects, there is no method for it to tell us
+++		 * to release the mappings, and we deadlock.
+++		 *
+++		 * However, if we make an explicit vmap of the page, that
+++		 * uses a larger vmalloc arena, and also has the ability
+++		 * to tell us to release unwanted mappings. Most importantly,
+++		 * it will fail and propagate an error instead of waiting
+++		 * forever.
+++		 *
+++		 * So if the page is beyond the 32b boundary, make an explicit
+++		 * vmap.
+++		 */
+++		if (n_pages == 1 && !PageHighMem(sg_page(obj->mm.pages->sgl)))
+++			return page_address(sg_page(obj->mm.pages->sgl));
++ 		pgprot = PAGE_KERNEL;
++ 		break;
++ 	case I915_MAP_WC:
++@@ -332,32 +320,51 @@ static void *i915_gem_object_map(struct drm_i915_gem_object *obj,
++ 		break;
++ 	}
++ 
++-	if (i915_gem_object_has_struct_page(obj)) {
++-		struct sgt_iter iter;
++-		struct page *page;
++-		pte_t **ptes = mem;
+++	if (n_pages > ARRAY_SIZE(stack)) {
+++		/* Too big for stack -- allocate temporary array instead */
+++		pages = kvmalloc_array(n_pages, sizeof(*pages), GFP_KERNEL);
+++		if (!pages)
+++			return NULL;
+++	}
++ 
++-		for_each_sgt_page(page, iter, sgt)
++-			**ptes++ = mk_pte(page, pgprot);
++-	} else {
++-		resource_size_t iomap;
++-		struct sgt_iter iter;
++-		pte_t **ptes = mem;
++-		dma_addr_t addr;
+++	i = 0;
+++	for_each_sgt_page(page, iter, obj->mm.pages)
+++		pages[i++] = page;
+++	vaddr = vmap(pages, n_pages, 0, pgprot);
+++	if (pages != stack)
+++		kvfree(pages);
+++	return vaddr;
+++}
++ 
++-		iomap = obj->mm.region->iomap.base;
++-		iomap -= obj->mm.region->region.start;
+++static void *i915_gem_object_map_pfn(struct drm_i915_gem_object *obj,
+++		enum i915_map_type type)
+++{
+++	resource_size_t iomap = obj->mm.region->iomap.base -
+++		obj->mm.region->region.start;
+++	unsigned long n_pfn = obj->base.size >> PAGE_SHIFT;
+++	unsigned long stack[32], *pfns = stack, i;
+++	struct sgt_iter iter;
+++	dma_addr_t addr;
+++	void *vaddr;
+++
+++	if (type != I915_MAP_WC)
+++		return NULL;
++ 
++-		for_each_sgt_daddr(addr, iter, sgt)
++-			**ptes++ = iomap_pte(iomap, addr, pgprot);
+++	if (n_pfn > ARRAY_SIZE(stack)) {
+++		/* Too big for stack -- allocate temporary array instead */
+++		pfns = kvmalloc_array(n_pfn, sizeof(*pfns), GFP_KERNEL);
+++		if (!pfns)
+++			return NULL;
++ 	}
++ 
++-	if (mem != stack)
++-		kvfree(mem);
++-
++-	return area->addr;
+++	i = 0;
+++	for_each_sgt_daddr(addr, iter, obj->mm.pages)
+++		pfns[i++] = (iomap + addr) >> PAGE_SHIFT;
+++	vaddr = vmap_pfn(pfns, n_pfn, pgprot_writecombine(PAGE_KERNEL_IO));
+++	if (pfns != stack)
+++		kvfree(pfns);
+++	return vaddr;
++ }
++-
++ /* get, pin, and map the pages of the object into kernel space */
++ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
++ 			      enum i915_map_type type)
++@@ -407,7 +414,13 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
++ 	}
++ 
++ 	if (!ptr) {
++-		ptr = i915_gem_object_map(obj, type);
+++		if (GEM_WARN_ON(type == I915_MAP_WC &&
+++				!static_cpu_has(X86_FEATURE_PAT)))
+++			ptr = NULL;
+++		else if (i915_gem_object_has_struct_page(obj))
+++			ptr = i915_gem_object_map_page(obj, type);
+++		else
+++			ptr = i915_gem_object_map_pfn(obj, type);
++ 		if (!ptr) {
++ 			err = -ENOMEM;
++ 			goto err_unpin;
++@@ -427,73 +440,7 @@ err_unlock:
++ 	goto out_unlock;
++ }
++ 
++-/* get, pin, and map the pages of the object into kernel space */
++-void *i915_gem_object_try_pin_map(struct drm_i915_gem_object *obj,
++-				  enum i915_map_type type)
++-{
++-	enum i915_map_type has_type;
++-	unsigned int flags;
++-	bool pinned;
++-	void *ptr;
++-	int err;
++-
++-	flags = I915_GEM_OBJECT_HAS_STRUCT_PAGE | I915_GEM_OBJECT_HAS_IOMEM;
++-	if (!i915_gem_object_type_has(obj, flags))
++-		return ERR_PTR(-ENXIO);
++-
++-	if (!mutex_trylock(&obj->mm.lock))
++-		return ERR_PTR(-EBUSY);
++-
++-	pinned = !(type & I915_MAP_OVERRIDE);
++-	type &= ~I915_MAP_OVERRIDE;
++-
++-	if (!atomic_inc_not_zero(&obj->mm.pages_pin_count)) {
++-		if (unlikely(!i915_gem_object_has_pages(obj))) {
++-			GEM_BUG_ON(i915_gem_object_has_pinned_pages(obj));
++-
++-			err = ____i915_gem_object_get_pages(obj);
++-			if (err)
++-				goto err_unlock;
++-
++-			smp_mb__before_atomic();
++-		}
++-		atomic_inc(&obj->mm.pages_pin_count);
++-		pinned = false;
++-	}
++-	GEM_BUG_ON(!i915_gem_object_has_pages(obj));
++-
++-	ptr = page_unpack_bits(obj->mm.mapping, &has_type);
++-	if (ptr && has_type != type) {
++-		if (pinned) {
++-			err = -EBUSY;
++-			goto err_unpin;
++-		}
++ 
++-		unmap_object(obj, ptr);
++-
++-		ptr = obj->mm.mapping = NULL;
++-	}
++-
++-	if (!ptr) {
++-		ptr = i915_gem_object_map(obj, type);
++-		if (!ptr) {
++-			err = -ENOMEM;
++-			goto err_unpin;
++-		}
++-
++-		obj->mm.mapping = page_pack_bits(ptr, type);
++-	}
++-
++-out_unlock:
++-	mutex_unlock(&obj->mm.lock);
++-	return ptr;
++-
++-err_unpin:
++-	atomic_dec(&obj->mm.pages_pin_count);
++-err_unlock:
++-	ptr = ERR_PTR(err);
++-	goto out_unlock;
++-}
++ 
++ void __i915_gem_object_flush_map(struct drm_i915_gem_object *obj,
++ 				 unsigned long offset,
++diff --git a/drivers/gpu/drm/i915/gem/i915_gem_shmem.c b/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
++index 26002472..61bd2db2 100644
++--- a/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
+++++ b/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
++@@ -259,8 +259,8 @@ shmem_writeback(struct drm_i915_gem_object *obj)
++ 	for (i = 0; i < obj->base.size >> PAGE_SHIFT; i++) {
++ 		struct page *page;
++ 
++-		page = find_lock_entry(mapping, i);
++-		if (!page || xa_is_value(page))
+++		page = find_lock_page(mapping, i);
+++		if (!page)
++ 			continue;
++ 
++ 		if (!page_mapped(page) && clear_page_dirty_for_io(page)) {
++diff --git a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c b/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
++index d62a71da..a971f2b9 100644
++--- a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
+++++ b/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
++@@ -82,29 +82,32 @@ __i915_gem_userptr_set_active(struct drm_i915_gem_object *obj, bool value)
++ 		del_object(mo);
++ 	spin_unlock(&mo->mn->lock);
++ }
++-
++-static void 
+++static int
++ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
++-                                  struct mm_struct *mm,
++-                                  unsigned long start,
++-                                  unsigned long end)
+++				  const struct mmu_notifier_range *range)
++ {
++ 	struct i915_mmu_notifier *mn =
++ 		container_of(_mn, struct i915_mmu_notifier, mn);
++ 	struct interval_tree_node *it;
+++	unsigned long end;
++ 	int ret = 0;
++ 
++ 	if (RB_EMPTY_ROOT(&mn->objects.rb_root))
++ 		return 0;
++ 
++ 	/* interval ranges are inclusive, but invalidate range is exclusive */
++-	end = end - 1;
+++	end = range->end - 1;
++ 
++ 	spin_lock(&mn->lock);
++-	it = interval_tree_iter_first(&mn->objects, start, end);
+++	it = interval_tree_iter_first(&mn->objects, range->start, end);
++ 	while (it) {
++ 		struct drm_i915_gem_object *obj;
++ 
+++		if (!mmu_notifier_range_blockable(range)) {
+++			ret = -EAGAIN;
+++			break;
+++		}
+++
++ 		/*
++ 		 * The mmu_object is released late when destroying the
++ 		 * GEM object so it is entirely possible to gain a
++@@ -117,7 +120,7 @@ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
++ 		 */
++ 		obj = container_of(it, struct i915_mmu_object, it)->obj;
++ 		if (!kref_get_unless_zero(&obj->base.refcount)) {
++-			it = interval_tree_iter_next(it, start, end);
+++			it = interval_tree_iter_next(it, range->start, end);
++ 			continue;
++ 		}
++ 		spin_unlock(&mn->lock);
++@@ -129,7 +132,7 @@ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
++ 			ret = __i915_gem_object_put_pages(obj);
++ 		i915_gem_object_put(obj);
++ 		if (ret)
++-			return ret ;
+++			return ret;
++ 
++ 		spin_lock(&mn->lock);
++ 
++@@ -138,11 +141,11 @@ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
++ 		 * over this range, there is no guarantee that this search will
++ 		 * terminate given a pathologic workload.
++ 		 */
++-		it = interval_tree_iter_first(&mn->objects, start, end);
+++		it = interval_tree_iter_first(&mn->objects, range->start, end);
++ 	}
++ 	spin_unlock(&mn->lock);
++ 
++-	return 0;
+++	return ret;
++ 
++ }
++ 
++@@ -196,7 +199,7 @@ i915_mmu_notifier_find(struct i915_mm_struct *mm)
++ 	if (IS_ERR(mn))
++ 		err = PTR_ERR(mn);
++ 
++-	down_write(&mm->mm->mmap_sem);
+++	mmap_write_lock(mm->mm);
++ 	mutex_lock(&mm->i915->mm_lock);
++ 	if (mm->mn == NULL && !err) {
++ 		/* Protected by mmap_sem (write-lock) */
++@@ -213,7 +216,7 @@ i915_mmu_notifier_find(struct i915_mm_struct *mm)
++ 		err = 0;
++ 	}
++ 	mutex_unlock(&mm->i915->mm_lock);
++-	up_write(&mm->mm->mmap_sem);
+++	mmap_write_unlock(mm->mm);
++ 
++ 	if (mn && !IS_ERR(mn))
++ 		kfree(mn);
++@@ -465,11 +468,11 @@ __i915_gem_userptr_get_pages_worker(struct work_struct *_work)
++ 		if (mmget_not_zero(mm)) {
++ 			while (pinned < npages) {
++ 				if (!locked) {
++-					down_read(&mm->mmap_sem);
+++					mmap_write_lock(mm);
++ 					locked = 1;
++ 				}
++ 				ret = get_user_pages_remote
++-					(work->task, mm,
+++					(mm,
++ 					 obj->userptr.ptr + pinned * PAGE_SIZE,
++ 					 npages - pinned,
++ 					 flags,
++@@ -480,7 +483,7 @@ __i915_gem_userptr_get_pages_worker(struct work_struct *_work)
++ 				pinned += ret;
++ 			}
++ 			if (locked)
++-				up_read(&mm->mmap_sem);
+++				mmap_write_unlock(mm);
++ 			mmput(mm);
++ 		}
++ 	}
++@@ -596,7 +599,7 @@ static int i915_gem_userptr_get_pages(struct drm_i915_gem_object *obj)
++ 				      __GFP_NORETRY |
++ 				      __GFP_NOWARN);
++ 		if (pvec) /* defer to worker if malloc fails */
++-			pinned = __get_user_pages_fast(obj->userptr.ptr,
+++			pinned = get_user_pages_fast(obj->userptr.ptr,
++ 						       num_pages,
++ 						       !i915_gem_object_is_readonly(obj),
++ 						       pvec);
++diff --git a/drivers/gpu/drm/i915/gt/intel_engine_user.c b/drivers/gpu/drm/i915/gt/intel_engine_user.c
++index 4f60c4e9..d6ae47dc 100644
++--- a/drivers/gpu/drm/i915/gt/intel_engine_user.c
+++++ b/drivers/gpu/drm/i915/gt/intel_engine_user.c
++@@ -49,7 +49,7 @@ static const u8 uabi_classes[] = {
++ 	[VIDEO_ENHANCEMENT_CLASS] = I915_ENGINE_CLASS_VIDEO_ENHANCE,
++ };
++ 
++-static int engine_cmp(void *priv, struct list_head *A, struct list_head *B)
+++static int engine_cmp(void *priv, const struct list_head *A, const struct list_head *B)
++ {
++ 	const struct intel_engine_cs *a =
++ 		container_of((struct rb_node *)A, typeof(*a), uabi_node);
++diff --git a/drivers/gpu/drm/i915/gt/intel_ggtt.c b/drivers/gpu/drm/i915/gt/intel_ggtt.c
++index b7fdccb1..2317f909 100644
++--- a/drivers/gpu/drm/i915/gt/intel_ggtt.c
+++++ b/drivers/gpu/drm/i915/gt/intel_ggtt.c
++@@ -811,8 +811,8 @@ static int ggtt_probe_common(struct i915_ggtt *ggtt, u64 size)
++ 	 * resort to an uncached mapping. The WC issue is easily caught by the
++ 	 * readback check when writing GTT PTE entries.
++ 	 */
++-	if (IS_GEN9_LP(i915) || INTEL_GEN(i915) >= 10)
++-		ggtt->gsm = ioremap_nocache(phys_addr, size);
+++	if (IS_GEN9_LP(i915) || INTEL_GEN(i915) >= 11)
+++		ggtt->gsm = ioremap(phys_addr, size);
++ 	else
++ 		ggtt->gsm = ioremap_wc(phys_addr, size);
++ 	if (!ggtt->gsm) {
++diff --git a/drivers/gpu/drm/i915/gt/intel_lrc.c b/drivers/gpu/drm/i915/gt/intel_lrc.c
++index 59d5837f..e1f1cafb 100644
++--- a/drivers/gpu/drm/i915/gt/intel_lrc.c
+++++ b/drivers/gpu/drm/i915/gt/intel_lrc.c
++@@ -1108,7 +1108,7 @@ static struct i915_request *
++ __unwind_incomplete_requests(struct intel_engine_cs *engine)
++ {
++ 	struct i915_request *rq, *rn, *active = NULL;
++-	struct list_head *uninitialized_var(pl);
+++	struct list_head *pl;
++ 	int prio = I915_PRIORITY_INVALID;
++ 
++ 	lockdep_assert_held(&engine->active.lock);
++diff --git a/drivers/gpu/drm/i915/gt/shmem_utils.c b/drivers/gpu/drm/i915/gt/shmem_utils.c
++index 82ae9653..86b115d2 100644
++--- a/drivers/gpu/drm/i915/gt/shmem_utils.c
+++++ b/drivers/gpu/drm/i915/gt/shmem_utils.c
++@@ -49,11 +49,6 @@ struct file *shmem_create_from_object(struct drm_i915_gem_object *obj)
++ 	return file;
++ }
++ 
++-static size_t shmem_npte(struct file *file)
++-{
++-	return file->f_mapping->host->i_size >> PAGE_SHIFT;
++-}
++-
++ static void __shmem_unpin_map(struct file *file, void *ptr, size_t n_pte)
++ {
++ 	unsigned long pfn;
++@@ -74,55 +69,38 @@ static void __shmem_unpin_map(struct file *file, void *ptr, size_t n_pte)
++ 
++ void *shmem_pin_map(struct file *file)
++ {
++-	const size_t n_pte = shmem_npte(file);
++-	pte_t *stack[32], **ptes, **mem;
++-	struct vm_struct *area;
++-	unsigned long pfn;
+++	struct page **pages;
+++	size_t n_pages, i;
+++	void *vaddr;
++ 
++-	mem = stack;
++-	if (n_pte > ARRAY_SIZE(stack)) {
++-		mem = kvmalloc_array(n_pte, sizeof(*mem), GFP_KERNEL);
++-		if (!mem)
++-			return NULL;
++-	}
++-
++-	area = alloc_vm_area(n_pte << PAGE_SHIFT, mem);
++-	if (!area) {
++-		if (mem != stack)
++-			kvfree(mem);
+++	n_pages = file->f_mapping->host->i_size >> PAGE_SHIFT;
+++	pages = kvmalloc_array(n_pages, sizeof(*pages), GFP_KERNEL);
+++	if (!pages)
++ 		return NULL;
++-	}
++ 
++-	ptes = mem;
++-	for (pfn = 0; pfn < n_pte; pfn++) {
++-		struct page *page;
++-
++-		page = shmem_read_mapping_page_gfp(file->f_mapping, pfn,
++-						   GFP_KERNEL);
++-		if (IS_ERR(page))
+++	for (i = 0; i < n_pages; i++) {
+++		pages[i] = shmem_read_mapping_page_gfp(file->f_mapping, i,
+++						       GFP_KERNEL);
+++		if (IS_ERR(pages[i]))
++ 			goto err_page;
++-
++-		**ptes++ = mk_pte(page,  PAGE_KERNEL);
++ 	}
++ 
++-	if (mem != stack)
++-		kvfree(mem);
++-
+++	vaddr = vmap(pages, n_pages, VM_MAP_PUT_PAGES, PAGE_KERNEL);
+++	if (!vaddr)
+++		goto err_page;
++ 	mapping_set_unevictable(file->f_mapping);
++-	return area->addr;
++-
+++	return vaddr;
++ err_page:
++-	if (mem != stack)
++-		kvfree(mem);
++-
++-	__shmem_unpin_map(file, area->addr, pfn);
+++	while (i--)
+++		put_page(pages[i]);
+++	kvfree(pages);
++ 	return NULL;
++ }
++ 
++ void shmem_unpin_map(struct file *file, void *ptr)
++ {
++ 	mapping_clear_unevictable(file->f_mapping);
++-	__shmem_unpin_map(file, ptr, shmem_npte(file));
+++	vfree(ptr);
++ }
++ 
++ static int __shmem_rw(struct file *file, loff_t off,
++diff --git a/drivers/gpu/drm/i915/gvt/debugfs.c b/drivers/gpu/drm/i915/gvt/debugfs.c
++index 285f6011..b53642d6 100644
++--- a/drivers/gpu/drm/i915/gvt/debugfs.c
+++++ b/drivers/gpu/drm/i915/gvt/debugfs.c
++@@ -41,7 +41,7 @@ struct diff_mmio {
++ 
++ /* Compare two diff_mmio items. */
++ static int mmio_offset_compare(void *priv,
++-	struct list_head *a, struct list_head *b)
+++	const struct list_head *a, const struct list_head *b)
++ {
++ 	struct diff_mmio *ma;
++ 	struct diff_mmio *mb;
++diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
++index d8301806..12dc87be 100644
++--- a/drivers/gpu/drm/i915/i915_drv.h
+++++ b/drivers/gpu/drm/i915/i915_drv.h
++@@ -38,7 +38,7 @@
++ #include <linux/i2c-algo-bit.h>
++ #include <linux/backlight.h>
++ #include <linux/hash.h>
++-#include <linux/intel-iommu.h>
+++//#include <linux/intel-iommu.h>
++ #include <linux/kref.h>
++ #include <linux/mm_types.h>
++ #include <linux/perf_event.h>
++@@ -1820,8 +1820,8 @@ extern const struct i915_rev_steppings kbl_revids[];
++ static inline bool intel_vtd_active(void)
++ {
++ #ifdef CONFIG_INTEL_IOMMU
++-	if (intel_iommu_gfx_mapped)
++-		return true;
+++	//if (intel_iommu_gfx_mapped)
+++	//	return true;
++ #endif
++ 	return false;
++ }
++diff --git a/drivers/gpu/drm/i915/i915_gpu_error.c b/drivers/gpu/drm/i915/i915_gpu_error.c
++index 941dbe96..50ba8526 100644
++--- a/drivers/gpu/drm/i915/i915_gpu_error.c
+++++ b/drivers/gpu/drm/i915/i915_gpu_error.c
++@@ -1717,7 +1717,7 @@ static void capture_gen(struct i915_gpu_coredump *error)
++ 
++ 	error->iommu = -1;
++ #ifdef CONFIG_INTEL_IOMMU
++-	error->iommu = intel_iommu_gfx_mapped;
+++//	error->iommu = intel_iommu_gfx_mapped;
++ #endif
++ 	error->reset_count = i915_reset_count(&i915->gpu_error);
++ 	error->suspend_count = i915->suspend_count;
++diff --git a/drivers/gpu/drm/i915/i915_ioc32.c b/drivers/gpu/drm/i915/i915_ioc32.c
++index df7d19bd..687233ad 100644
++--- a/drivers/gpu/drm/i915/i915_ioc32.c
+++++ b/drivers/gpu/drm/i915/i915_ioc32.c
++@@ -45,20 +45,16 @@ static int compat_i915_getparam(struct file *file, unsigned int cmd,
++ 				unsigned long arg)
++ {
++ 	struct drm_i915_getparam32 req32;
++-	drm_i915_getparam_t __user *request;
+++	struct drm_i915_getparam req;
++ 
++ 	if (copy_from_user(&req32, (void __user *)arg, sizeof(req32)))
++ 		return -EFAULT;
++ 
++-	request = compat_alloc_user_space(sizeof(*request));
++-	if (!access_ok(request, sizeof(*request)) ||
++-	    __put_user(req32.param, &request->param) ||
++-	    __put_user((void __user *)(unsigned long)req32.value,
++-		       &request->value))
++-		return -EFAULT;
+++	req.param = req32.param;
+++	req.value = compat_ptr(req32.value);
++ 
++-	return drm_ioctl(file, DRM_IOCTL_I915_GETPARAM,
++-			 (unsigned long)request);
+++	return drm_ioctl_kernel(file, i915_getparam_ioctl, &req,
+++				DRM_RENDER_ALLOW);
++ }
++ 
++ static drm_ioctl_compat_t *i915_compat_ioctls[] = {
++diff --git a/drivers/gpu/drm/i915/i915_pmu.c b/drivers/gpu/drm/i915/i915_pmu.c
++index 3489ff56..790aa5b9 100644
++--- a/drivers/gpu/drm/i915/i915_pmu.c
+++++ b/drivers/gpu/drm/i915/i915_pmu.c
++@@ -427,7 +427,7 @@ static enum hrtimer_restart i915_sample(struct hrtimer *hrtimer)
++ static u64 count_interrupts(struct drm_i915_private *i915)
++ {
++ 	/* open-coded kstat_irqs() */
++-	struct irq_desc *desc = irq_to_desc(i915->drm.pdev->irq);
+++	struct irq_desc *desc = irq_data_to_desc( irq_get_irq_data(i915->drm.pdev->irq));
++ 	u64 sum = 0;
++ 	int cpu;
++ 
++diff --git a/drivers/gpu/drm/i915/intel_device_info.c b/drivers/gpu/drm/i915/intel_device_info.c
++index a6ce64f4..b51fe986 100644
++--- a/drivers/gpu/drm/i915/intel_device_info.c
+++++ b/drivers/gpu/drm/i915/intel_device_info.c
++@@ -82,7 +82,7 @@ static const char *iommu_name(void)
++ 	const char *msg = "n/a";
++ 
++ #ifdef CONFIG_INTEL_IOMMU
++-	msg = enableddisabled(intel_iommu_gfx_mapped);
+++	//msg = enableddisabled(intel_iommu_gfx_mapped);
++ #endif
++ 
++ 	return msg;
++diff --git a/drivers/gpu/drm/i915/intel_uncore.c b/drivers/gpu/drm/i915/intel_uncore.c
++index 55b34902..94e9435b 100644
++--- a/drivers/gpu/drm/i915/intel_uncore.c
+++++ b/drivers/gpu/drm/i915/intel_uncore.c
++@@ -1991,7 +1991,7 @@ int __intel_wait_for_register_fw(struct intel_uncore *uncore,
++ 				 unsigned int slow_timeout_ms,
++ 				 u32 *out_value)
++ {
++-	u32 uninitialized_var(reg_value);
+++	u32 reg_value;
++ #define done (((reg_value = intel_uncore_read_fw(uncore, reg)) & mask) == value)
++ 	int ret;
++ 
++diff --git a/drivers/gpu/drm/i915/selftests/i915_gem_gtt.c b/drivers/gpu/drm/i915/selftests/i915_gem_gtt.c
++index 359493f9..ab84ce14 100644
++--- a/drivers/gpu/drm/i915/selftests/i915_gem_gtt.c
+++++ b/drivers/gpu/drm/i915/selftests/i915_gem_gtt.c
++@@ -1063,7 +1063,7 @@ static int igt_ppgtt_shrink_boom(void *arg)
++ 	return exercise_ppgtt(arg, shrink_boom);
++ }
++ 
++-static int sort_holes(void *priv, struct list_head *A, struct list_head *B)
+++static int sort_holes(void *priv, const struct list_head *A, const struct list_head *B)
++ {
++ 	struct drm_mm_node *a = list_entry(A, typeof(*a), hole_stack);
++ 	struct drm_mm_node *b = list_entry(B, typeof(*b), hole_stack);
++diff --git a/drivers/gpu/drm/nouveau/nouveau_svm.c b/drivers/gpu/drm/nouveau/nouveau_svm.c
++index df9bf1fd..2ecce029 100644
++--- a/drivers/gpu/drm/nouveau/nouveau_svm.c
+++++ b/drivers/gpu/drm/nouveau/nouveau_svm.c
++@@ -169,7 +169,7 @@ nouveau_svmm_bind(struct drm_device *dev, void *data,
++ 	 */
++ 
++ 	mm = get_task_mm(current);
++-	down_read(&mm->mmap_sem);
+++	mmap_read_lock(mm);
++ 
++ 	for (addr = args->va_start, end = args->va_start + size; addr < end;) {
++ 		struct vm_area_struct *vma;
++@@ -192,7 +192,7 @@ nouveau_svmm_bind(struct drm_device *dev, void *data,
++ 	 */
++ 	args->result = 0;
++ 
++-	up_read(&mm->mmap_sem);
+++	mmap_read_unlock(mm);
++ 	mmput(mm);
++ 
++ 	return 0;
++@@ -342,7 +342,7 @@ nouveau_svmm_init(struct drm_device *dev, void *data,
++ 	if (ret)
++ 		goto out_free;
++ 
++-	down_write(&current->mm->mmap_sem);
+++	mmap_write_lock(current->mm);
++ 	svmm->notifier.ops = &nouveau_mn_ops;
++ 	ret = __mmu_notifier_register(&svmm->notifier, current->mm);
++ 	if (ret)
++@@ -351,12 +351,12 @@ nouveau_svmm_init(struct drm_device *dev, void *data,
++ 
++ 	cli->svm.svmm = svmm;
++ 	cli->svm.cli = cli;
++-	up_write(&current->mm->mmap_sem);
+++	mmap_write_unlock(current->mm);
++ 	mutex_unlock(&cli->mutex);
++ 	return 0;
++ 
++ out_mm_unlock:
++-	up_write(&current->mm->mmap_sem);
+++	mmap_write_unlock(current->mm);
++ out_free:
++ 	mutex_unlock(&cli->mutex);
++ 	kfree(svmm);
++@@ -540,9 +540,9 @@ static int nouveau_range_fault(struct nouveau_svmm *svmm,
++ 		range.notifier_seq = mmu_interval_read_begin(range.notifier);
++ 		range.default_flags = 0;
++ 		range.pfn_flags_mask = -1UL;
++-		down_read(&mm->mmap_sem);
+++		mmap_read_lock(mm);
++ 		ret = hmm_range_fault(&range, 0);
++-		up_read(&mm->mmap_sem);
+++		mmap_read_unlock(mm);
++ 		if (ret <= 0) {
++ 			if (ret == 0 || ret == -EBUSY)
++ 				continue;
++@@ -671,18 +671,18 @@ nouveau_svm_fault(struct nvif_notify *notify)
++ 		/* Intersect fault window with the CPU VMA, cancelling
++ 		 * the fault if the address is invalid.
++ 		 */
++-		down_read(&mm->mmap_sem);
+++		mmap_read_lock(mm);
++ 		vma = find_vma_intersection(mm, start, limit);
++ 		if (!vma) {
++ 			SVMM_ERR(svmm, "wndw %016llx-%016llx", start, limit);
++-			up_read(&mm->mmap_sem);
+++			mmap_read_unlock(mm);
++ 			mmput(mm);
++ 			nouveau_svm_fault_cancel_fault(svm, buffer->fault[fi]);
++ 			continue;
++ 		}
++ 		start = max_t(u64, start, vma->vm_start);
++ 		limit = min_t(u64, limit, vma->vm_end);
++-		up_read(&mm->mmap_sem);
+++		mmap_read_unlock(mm);
++ 		SVMM_DBG(svmm, "wndw %016llx-%016llx", start, limit);
++ 
++ 		if (buffer->fault[fi]->addr != start) {
++diff --git a/drivers/gpu/drm/radeon/radeon_cs.c b/drivers/gpu/drm/radeon/radeon_cs.c
++index 0d0ab8e0..a75a75c5 100644
++--- a/drivers/gpu/drm/radeon/radeon_cs.c
+++++ b/drivers/gpu/drm/radeon/radeon_cs.c
++@@ -196,12 +196,12 @@ static int radeon_cs_parser_relocs(struct radeon_cs_parser *p)
++ 		p->vm_bos = radeon_vm_get_bos(p->rdev, p->ib.vm,
++ 					      &p->validated);
++ 	if (need_mmap_lock)
++-		down_read(&current->mm->mmap_sem);
+++		mmap_read_lock(current->mm);
++ 
++ 	r = radeon_bo_list_validate(p->rdev, &p->ticket, &p->validated, p->ring);
++ 
++ 	if (need_mmap_lock)
++-		up_read(&current->mm->mmap_sem);
+++		mmap_read_unlock(current->mm);
++ 
++ 	return r;
++ }
++@@ -394,8 +394,8 @@ int radeon_cs_parser_init(struct radeon_cs_parser *p, void *data)
++ 	return 0;
++ }
++ 
++-static int cmp_size_smaller_first(void *priv, struct list_head *a,
++-				  struct list_head *b)
+++static int cmp_size_smaller_first(void *priv, const struct list_head *a,
+++				  const struct list_head *b)
++ {
++ 	struct radeon_bo_list *la = list_entry(a, struct radeon_bo_list, tv.head);
++ 	struct radeon_bo_list *lb = list_entry(b, struct radeon_bo_list, tv.head);
++diff --git a/drivers/gpu/drm/radeon/radeon_gem.c b/drivers/gpu/drm/radeon/radeon_gem.c
++index 068c3e5d..3c8f570a 100644
++--- a/drivers/gpu/drm/radeon/radeon_gem.c
+++++ b/drivers/gpu/drm/radeon/radeon_gem.c
++@@ -342,17 +342,17 @@ int radeon_gem_userptr_ioctl(struct drm_device *dev, void *data,
++ 	}
++ 
++ 	if (args->flags & RADEON_GEM_USERPTR_VALIDATE) {
++-		down_read(&current->mm->mmap_sem);
+++		mmap_read_lock(current->mm);
++ 		r = radeon_bo_reserve(bo, true);
++ 		if (r) {
++-			up_read(&current->mm->mmap_sem);
+++			mmap_read_unlock(current->mm);
++ 			goto release_object;
++ 		}
++ 
++ 		radeon_ttm_placement_from_domain(bo, RADEON_GEM_DOMAIN_GTT);
++ 		r = ttm_bo_validate(&bo->tbo, &bo->placement, &ctx);
++ 		radeon_bo_unreserve(bo);
++-		up_read(&current->mm->mmap_sem);
+++		mmap_read_unlock(current->mm);
++ 		if (r)
++ 			goto release_object;
++ 	}
++diff --git a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
++index 6e1270e4..dfe8ca20 100644
++--- a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
+++++ b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
++@@ -516,8 +516,8 @@ dw_mipi_dsi_get_lane_mbps(void *priv_data, const struct drm_display_mode *mode,
++ 	unsigned long best_freq = 0;
++ 	unsigned long fvco_min, fvco_max, fin, fout;
++ 	unsigned int min_prediv, max_prediv;
++-	unsigned int _prediv, uninitialized_var(best_prediv);
++-	unsigned long _fbdiv, uninitialized_var(best_fbdiv);
+++	unsigned int _prediv, best_prediv;
+++	unsigned long _fbdiv, best_fbdiv;
++ 	unsigned long min_delta = ULONG_MAX;
++ 
++ 	dsi->format = format;
++diff --git a/drivers/gpu/drm/ttm/ttm_bo_vm.c b/drivers/gpu/drm/ttm/ttm_bo_vm.c
++index eebb4c06..3d427e1d 100644
++--- a/drivers/gpu/drm/ttm/ttm_bo_vm.c
+++++ b/drivers/gpu/drm/ttm/ttm_bo_vm.c
++@@ -67,7 +67,7 @@ static vm_fault_t ttm_bo_vm_fault_idle(struct ttm_buffer_object *bo,
++ 			goto out_unlock;
++ 
++ 		ttm_bo_get(bo);
++-		up_read(&vmf->vma->vm_mm->mmap_sem);
+++		mmap_read_unlock(vmf->vma->vm_mm);
++ 		(void) dma_fence_wait(bo->moving, true);
++ 		dma_resv_unlock(bo->base.resv);
++ 		ttm_bo_put(bo);
++@@ -138,7 +138,7 @@ vm_fault_t ttm_bo_vm_reserve(struct ttm_buffer_object *bo,
++ 		if (vmf->flags & FAULT_FLAG_ALLOW_RETRY) {
++ 			if (!(vmf->flags & FAULT_FLAG_RETRY_NOWAIT)) {
++ 				ttm_bo_get(bo);
++-				up_read(&vmf->vma->vm_mm->mmap_sem);
+++				mmap_read_unlock(vmf->vma->vm_mm);
++ 				if (!dma_resv_lock_interruptible(bo->base.resv,
++ 								 NULL))
++ 					dma_resv_unlock(bo->base.resv);
++diff --git a/drivers/misc/mei/bus.c b/drivers/misc/mei/bus.c
++index b87cc253..113b320c 100644
++--- a/drivers/misc/mei/bus.c
+++++ b/drivers/misc/mei/bus.c
++@@ -734,20 +734,15 @@ static int mei_cl_device_probe(struct device *dev)
++  *
++  * @dev: device
++  *
++- * Return:  0 on success; < 0 otherwise
+++ * Return:  void
++  */
++-static int mei_cl_device_remove(struct device *dev)
+++static void mei_cl_device_remove(struct device *dev)
++ 
++ {
++ 	struct mei_cl_device *cldev = to_mei_cl_device(dev);
++-
++-	struct mei_cl_driver *cldrv;
+++	struct mei_cl_driver *cldrv = to_mei_cl_driver(dev->driver);
++ 	int ret = 0;
++ 
++-	if (!cldev || !dev->driver)
++-		return 0;
++-
++-	cldrv = to_mei_cl_driver(dev->driver);
++ 	if (cldrv->remove)
++ #ifdef BPM_BUS_REMOVE_FUNCTION_RETURN_TYPE_CHANGED
++ 		cldrv->remove(cldev);
++@@ -759,7 +754,7 @@ static int mei_cl_device_remove(struct device *dev)
++ 
++ 	mei_cl_bus_module_put(cldev);
++ 	module_put(THIS_MODULE);
++-        return ret;
+++
++ }
++ 
++ static ssize_t name_show(struct device *dev, struct device_attribute *a,
++diff --git a/drivers/misc/mei/mei-gsc.mod b/drivers/misc/mei/mei-gsc.mod
++index f5295383..05dcf919 100644
++--- a/drivers/misc/mei/mei-gsc.mod
+++++ b/drivers/misc/mei/mei-gsc.mod
++@@ -1,2 +1,2 @@
++-/home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/gsc-me.o
+++/home/media/wj/kmd-backport/drivers/misc/mei/gsc-me.o
++ 
++diff --git a/drivers/misc/mei/mei-me.mod b/drivers/misc/mei/mei-me.mod
++index 9b12a2cf..8635ddc8 100644
++--- a/drivers/misc/mei/mei-me.mod
+++++ b/drivers/misc/mei/mei-me.mod
++@@ -1,2 +1,2 @@
++-/home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/pci-me.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/hw-me.o
+++/home/media/wj/kmd-backport/drivers/misc/mei/pci-me.o /home/media/wj/kmd-backport/drivers/misc/mei/hw-me.o
++ 
++diff --git a/drivers/misc/mei/mei.mod b/drivers/misc/mei/mei.mod
++index 706811a7..63e0c2ef 100644
++--- a/drivers/misc/mei/mei.mod
+++++ b/drivers/misc/mei/mei.mod
++@@ -1,2 +1,2 @@
++-/home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/init.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/hbm.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/interrupt.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/client.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/main.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/dma-ring.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/bus.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/bus-fixup.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/debugfs.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/mei-trace.o
+++/home/media/wj/kmd-backport/drivers/misc/mei/init.o /home/media/wj/kmd-backport/drivers/misc/mei/hbm.o /home/media/wj/kmd-backport/drivers/misc/mei/interrupt.o /home/media/wj/kmd-backport/drivers/misc/mei/client.o /home/media/wj/kmd-backport/drivers/misc/mei/main.o /home/media/wj/kmd-backport/drivers/misc/mei/dma-ring.o /home/media/wj/kmd-backport/drivers/misc/mei/bus.o /home/media/wj/kmd-backport/drivers/misc/mei/bus-fixup.o /home/media/wj/kmd-backport/drivers/misc/mei/debugfs.o /home/media/wj/kmd-backport/drivers/misc/mei/mei-trace.o
++ 
++diff --git a/include/drm/intel-gtt.h b/include/drm/intel-gtt.h
++index a8dba006..7da7cb56 100644
++--- a/include/drm/intel-gtt.h
+++++ b/include/drm/intel-gtt.h
++@@ -43,7 +43,7 @@ void intel_gtt_clear_range(unsigned int first_entry, unsigned int num_entries);
++ #define AGP_USER_CACHED_MEMORY_GFDT (1 << 3)
++ 
++ #ifdef CONFIG_INTEL_IOMMU
++-extern int intel_iommu_gfx_mapped;
+++//extern int intel_iommu_gfx_mapped;
++ #endif
++ 
++ #endif
++-- 
++2.39.1
++
+diff --git a/Makefile b/Makefile
+index f412c785..08d5e94b 100644
+--- a/Makefile
++++ b/Makefile
+@@ -85,7 +85,7 @@ mrproper:
+ 			done								\
+ 		) > Kconfig.kernel							;\
+ 		kver=$$($(MAKE) --no-print-directory -C $(KLIB_BUILD) kernelversion |	\
+-			sed 's/^\(\([3-4]\|2\.6\)\.[0-9]\+\).*/\1/;t;d')		;\
++			sed 's/^\(\([3-5]\|2\.6\)\.[0-9]\+\).*/\1/;t;d')		;\
+ 		test "$$kver" != "" || echo "Kernel version parse failed!"		;\
+ 		test "$$kver" != ""							;\
+ 		kvers="$$(seq 14 39 | sed 's/^/2.6./')"					;\
+diff --git a/arch/x86/include/asm/intel-mid.h b/arch/x86/include/asm/intel-mid.h
+deleted file mode 100644
+index 8e5af119..00000000
+--- a/arch/x86/include/asm/intel-mid.h
++++ /dev/null
+@@ -1,130 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0-only */
+-/*
+- * intel-mid.h: Intel MID specific setup code
+- *
+- * (C) Copyright 2009 Intel Corporation
+- */
+-#ifndef _ASM_X86_INTEL_MID_H
+-#define _ASM_X86_INTEL_MID_H
+-
+-#include <linux/sfi.h>
+-#include <linux/pci.h>
+-#include <linux/platform_device.h>
+-
+-extern int intel_mid_pci_init(void);
+-extern int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state);
+-extern pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev);
+-
+-extern void intel_mid_pwr_power_off(void);
+-
+-#define INTEL_MID_PWR_LSS_OFFSET	4
+-#define INTEL_MID_PWR_LSS_TYPE		(1 << 7)
+-
+-extern int intel_mid_pwr_get_lss_id(struct pci_dev *pdev);
+-
+-extern int get_gpio_by_name(const char *name);
+-extern int __init sfi_parse_mrtc(struct sfi_table_header *table);
+-extern int __init sfi_parse_mtmr(struct sfi_table_header *table);
+-extern int sfi_mrtc_num;
+-extern struct sfi_rtc_table_entry sfi_mrtc_array[];
+-
+-/*
+- * Here defines the array of devices platform data that IAFW would export
+- * through SFI "DEVS" table, we use name and type to match the device and
+- * its platform data.
+- */
+-struct devs_id {
+-	char name[SFI_NAME_LEN + 1];
+-	u8 type;
+-	u8 delay;
+-	u8 msic;
+-	void *(*get_platform_data)(void *info);
+-};
+-
+-#define sfi_device(i)								\
+-	static const struct devs_id *const __intel_mid_sfi_##i##_dev __used	\
+-	__attribute__((__section__(".x86_intel_mid_dev.init"))) = &i
+-
+-/**
+-* struct mid_sd_board_info - template for SD device creation
+-* @name:		identifies the driver
+-* @bus_num:		board-specific identifier for a given SD controller
+-* @max_clk:		the maximum frequency device supports
+-* @platform_data:	the particular data stored there is driver-specific
+-*/
+-struct mid_sd_board_info {
+-	char		name[SFI_NAME_LEN];
+-	int		bus_num;
+-	unsigned short	addr;
+-	u32		max_clk;
+-	void		*platform_data;
+-};
+-
+-/*
+- * Medfield is the follow-up of Moorestown, it combines two chip solution into
+- * one. Other than that it also added always-on and constant tsc and lapic
+- * timers. Medfield is the platform name, and the chip name is called Penwell
+- * we treat Medfield/Penwell as a variant of Moorestown. Penwell can be
+- * identified via MSRs.
+- */
+-enum intel_mid_cpu_type {
+-	/* 1 was Moorestown */
+-	INTEL_MID_CPU_CHIP_PENWELL = 2,
+-	INTEL_MID_CPU_CHIP_CLOVERVIEW,
+-	INTEL_MID_CPU_CHIP_TANGIER,
+-};
+-
+-extern enum intel_mid_cpu_type __intel_mid_cpu_chip;
+-
+-#ifdef CONFIG_X86_INTEL_MID
+-
+-static inline enum intel_mid_cpu_type intel_mid_identify_cpu(void)
+-{
+-	return __intel_mid_cpu_chip;
+-}
+-
+-static inline bool intel_mid_has_msic(void)
+-{
+-	return (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_PENWELL);
+-}
+-
+-#else /* !CONFIG_X86_INTEL_MID */
+-
+-#define intel_mid_identify_cpu()	0
+-#define intel_mid_has_msic()		0
+-
+-#endif /* !CONFIG_X86_INTEL_MID */
+-
+-enum intel_mid_timer_options {
+-	INTEL_MID_TIMER_DEFAULT,
+-	INTEL_MID_TIMER_APBT_ONLY,
+-	INTEL_MID_TIMER_LAPIC_APBT,
+-};
+-
+-extern enum intel_mid_timer_options intel_mid_timer_options;
+-
+-/* Bus Select SoC Fuse value */
+-#define BSEL_SOC_FUSE_MASK		0x7
+-/* FSB 133MHz */
+-#define BSEL_SOC_FUSE_001		0x1
+-/* FSB 100MHz */
+-#define BSEL_SOC_FUSE_101		0x5
+-/* FSB 83MHz */
+-#define BSEL_SOC_FUSE_111		0x7
+-
+-#define SFI_MTMR_MAX_NUM		8
+-#define SFI_MRTC_MAX			8
+-
+-extern void intel_scu_devices_create(void);
+-extern void intel_scu_devices_destroy(void);
+-
+-/* VRTC timer */
+-#define MRST_VRTC_MAP_SZ		1024
+-/* #define MRST_VRTC_PGOFFSET		0xc00 */
+-
+-extern void intel_mid_rtc_init(void);
+-
+-/* The offset for the mapping of global gpio pin to irq */
+-#define INTEL_MID_IRQ_OFFSET		0x100
+-
+-#endif /* _ASM_X86_INTEL_MID_H */
+diff --git a/backport-include/asm/intel-mid.h b/backport-include/asm/intel-mid.h
+deleted file mode 100644
+index 7c5af123..00000000
+--- a/backport-include/asm/intel-mid.h
++++ /dev/null
+@@ -1,151 +0,0 @@
+-/*
+- * intel-mid.h: Intel MID specific setup code
+- *
+- * (C) Copyright 2009 Intel Corporation
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; version 2
+- * of the License.
+- */
+-#ifndef _ASM_X86_INTEL_MID_H
+-#define _ASM_X86_INTEL_MID_H
+-
+-#include <linux/sfi.h>
+-#include <linux/platform_device.h>
+-
+-extern int intel_mid_pci_init(void);
+-extern int get_gpio_by_name(const char *name);
+-extern void intel_scu_device_register(struct platform_device *pdev);
+-extern int __init sfi_parse_mrtc(struct sfi_table_header *table);
+-extern int __init sfi_parse_mtmr(struct sfi_table_header *table);
+-extern int sfi_mrtc_num;
+-extern struct sfi_rtc_table_entry sfi_mrtc_array[];
+-
+-/*
+- * Here defines the array of devices platform data that IAFW would export
+- * through SFI "DEVS" table, we use name and type to match the device and
+- * its platform data.
+- */
+-struct devs_id {
+-	char name[SFI_NAME_LEN + 1];
+-	u8 type;
+-	u8 delay;
+-	void *(*get_platform_data)(void *info);
+-	/* Custom handler for devices */
+-	void (*device_handler)(struct sfi_device_table_entry *pentry,
+-				struct devs_id *dev);
+-};
+-
+-#define sfi_device(i)   \
+-	static const struct devs_id *const __intel_mid_sfi_##i##_dev __used \
+-	__attribute__((__section__(".x86_intel_mid_dev.init"))) = &i
+-
+-/*
+- * Medfield is the follow-up of Moorestown, it combines two chip solution into
+- * one. Other than that it also added always-on and constant tsc and lapic
+- * timers. Medfield is the platform name, and the chip name is called Penwell
+- * we treat Medfield/Penwell as a variant of Moorestown. Penwell can be
+- * identified via MSRs.
+- */
+-enum intel_mid_cpu_type {
+-	/* 1 was Moorestown */
+-	INTEL_MID_CPU_CHIP_PENWELL = 2,
+-	INTEL_MID_CPU_CHIP_CLOVERVIEW,
+-	INTEL_MID_CPU_CHIP_TANGIER,
+-};
+-
+-extern enum intel_mid_cpu_type __intel_mid_cpu_chip;
+-
+-/**
+- * struct intel_mid_ops - Interface between intel-mid & sub archs
+- * @arch_setup: arch_setup function to re-initialize platform
+- *             structures (x86_init, x86_platform_init)
+- *
+- * This structure can be extended if any new interface is required
+- * between intel-mid & its sub arch files.
+- */
+-struct intel_mid_ops {
+-	void (*arch_setup)(void);
+-};
+-
+-/* Helper API's for INTEL_MID_OPS_INIT */
+-#define DECLARE_INTEL_MID_OPS_INIT(cpuname, cpuid)	\
+-				[cpuid] = get_##cpuname##_ops
+-
+-/* Maximum number of CPU ops */
+-#define MAX_CPU_OPS(a) (sizeof(a)/sizeof(void *))
+-
+-/*
+- * For every new cpu addition, a weak get_<cpuname>_ops() function needs be
+- * declared in arch/x86/platform/intel_mid/intel_mid_weak_decls.h.
+- */
+-#define INTEL_MID_OPS_INIT {\
+-	DECLARE_INTEL_MID_OPS_INIT(penwell, INTEL_MID_CPU_CHIP_PENWELL), \
+-	DECLARE_INTEL_MID_OPS_INIT(cloverview, INTEL_MID_CPU_CHIP_CLOVERVIEW), \
+-	DECLARE_INTEL_MID_OPS_INIT(tangier, INTEL_MID_CPU_CHIP_TANGIER) \
+-};
+-
+-#ifdef CONFIG_X86_INTEL_MID
+-
+-static inline enum intel_mid_cpu_type intel_mid_identify_cpu(void)
+-{
+-	return __intel_mid_cpu_chip;
+-}
+-
+-static inline bool intel_mid_has_msic(void)
+-{
+-	return (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_PENWELL);
+-}
+-
+-#else /* !CONFIG_X86_INTEL_MID */
+-
+-#define intel_mid_identify_cpu()    (0)
+-#define intel_mid_has_msic()    (0)
+-
+-#endif /* !CONFIG_X86_INTEL_MID */
+-
+-enum intel_mid_timer_options {
+-	INTEL_MID_TIMER_DEFAULT,
+-	INTEL_MID_TIMER_APBT_ONLY,
+-	INTEL_MID_TIMER_LAPIC_APBT,
+-};
+-
+-extern enum intel_mid_timer_options intel_mid_timer_options;
+-
+-/*
+- * Penwell uses spread spectrum clock, so the freq number is not exactly
+- * the same as reported by MSR based on SDM.
+- */
+-#define FSB_FREQ_83SKU	83200
+-#define FSB_FREQ_100SKU	99840
+-#define FSB_FREQ_133SKU	133000
+-
+-#define FSB_FREQ_167SKU	167000
+-#define FSB_FREQ_200SKU	200000
+-#define FSB_FREQ_267SKU	267000
+-#define FSB_FREQ_333SKU	333000
+-#define FSB_FREQ_400SKU	400000
+-
+-/* Bus Select SoC Fuse value */
+-#define BSEL_SOC_FUSE_MASK	0x7
+-#define BSEL_SOC_FUSE_001	0x1 /* FSB 133MHz */
+-#define BSEL_SOC_FUSE_101	0x5 /* FSB 100MHz */
+-#define BSEL_SOC_FUSE_111	0x7 /* FSB 83MHz */
+-
+-#define SFI_MTMR_MAX_NUM 8
+-#define SFI_MRTC_MAX	8
+-
+-extern void intel_scu_devices_create(void);
+-extern void intel_scu_devices_destroy(void);
+-
+-/* VRTC timer */
+-#define MRST_VRTC_MAP_SZ	(1024)
+-/*#define MRST_VRTC_PGOFFSET	(0xc00) */
+-
+-extern void intel_mid_rtc_init(void);
+-
+-/* the offset for the mapping of global gpio pin to irq */
+-#define INTEL_MID_IRQ_OFFSET 0x100
+-
+-#endif /* _ASM_X86_INTEL_MID_H */
+diff --git a/backport-include/drm/drm.h b/backport-include/drm/drm.h
+index 2615d183..e8644d21 100644
+--- a/backport-include/drm/drm.h
++++ b/backport-include/drm/drm.h
+@@ -29,7 +29,7 @@
+ #define _BACKPORT_DRM_MODES_H
+ #include <linux/version.h>
+ 
+-//#include <drm/rename-symbols.h>
++#include <drm/rename-symbols.h>
+ #include_next <drm/drm.h>
+ 
+ #endif
+diff --git a/backport-include/trace/define_trace.h b/backport-include/trace/define_trace.h
+index cb30c553..723fce44 100644
+--- a/backport-include/trace/define_trace.h
++++ b/backport-include/trace/define_trace.h
+@@ -25,7 +25,7 @@
+ 
+ #undef TRACE_EVENT
+ #define TRACE_EVENT(name, proto, args, tstruct, assign, print)	\
+-	DEFINE_TRACE(name)
++	DEFINE_TRACE(name, PARAMS(proto), PARAMS(args))
+ 
+ #undef TRACE_EVENT_CONDITION
+ #define TRACE_EVENT_CONDITION(name, proto, args, cond, tstruct, assign, print) \
+@@ -48,7 +48,7 @@
+ 
+ #undef DEFINE_EVENT
+ #define DEFINE_EVENT(template, name, proto, args) \
+-	DEFINE_TRACE(name)
++	DEFINE_TRACE(name, PARAMS(proto), PARAMS(args))
+ 
+ #undef DEFINE_EVENT_FN
+ #define DEFINE_EVENT_FN(template, name, proto, args, reg, unreg) \
+@@ -56,7 +56,7 @@
+ 
+ #undef DEFINE_EVENT_PRINT
+ #define DEFINE_EVENT_PRINT(template, name, proto, args, print)	\
+-	DEFINE_TRACE(name)
++	DEFINE_TRACE(name, PARAMS(proto), PARAMS(args))
+ 
+ #undef DEFINE_EVENT_CONDITION
+ #define DEFINE_EVENT_CONDITION(template, name, proto, args, cond) \
+@@ -64,7 +64,7 @@
+ 
+ #undef DECLARE_TRACE
+ #define DECLARE_TRACE(name, proto, args)	\
+-	DEFINE_TRACE(name)
++	DEFINE_TRACE(name, PARAMS(proto), PARAMS(args))
+ 
+ #undef TRACE_INCLUDE
+ #undef __TRACE_INCLUDE
+diff --git a/backport-include/trace/trace_events.h b/backport-include/trace/trace_events.h
+index 4ecdfe2e..859e1302 100644
+--- a/backport-include/trace/trace_events.h
++++ b/backport-include/trace/trace_events.h
+@@ -2,7 +2,8 @@
+ /*
+  * Stage 1 of the trace events.
+  *
+- * Override the macros in <trace/trace_events.h> to include the following:
++ * Override the macros in the event tracepoint header <trace/events/XXX.h>
++ * to include the following:
+  *
+  * struct trace_event_raw_<call> {
+  *	struct trace_entry		ent;
+@@ -209,8 +210,7 @@ TRACE_MAKE_SYSTEM_STR();
+ #define DEFINE_EVENT(template, name, proto, args)
+ 
+ #undef DEFINE_EVENT_PRINT
+-#define DEFINE_EVENT_PRINT(template, name, proto, args, print)	\
+-	DEFINE_EVENT(template, name, PARAMS(proto), PARAMS(args))
++#define DEFINE_EVENT_PRINT(template, name, proto, args, print)
+ 
+ #undef TRACE_EVENT_FLAGS
+ #define TRACE_EVENT_FLAGS(event, flag)
+@@ -223,7 +223,8 @@ TRACE_MAKE_SYSTEM_STR();
+ /*
+  * Stage 3 of the trace events.
+  *
+- * Override the macros in <trace/trace_events.h> to include the following:
++ * Override the macros in the event tracepoint header <trace/events/XXX.h>
++ * to include the following:
+  *
+  * enum print_line_t
+  * trace_raw_output_<call>(struct trace_iterator *iter, int flags)
+@@ -340,6 +341,12 @@ TRACE_MAKE_SYSTEM_STR();
+ 		trace_print_array_seq(p, array, count, el_size);	\
+ 	})
+ 
++#undef __print_hex_dump
++#define __print_hex_dump(prefix_str, prefix_type,			\
++			 rowsize, groupsize, buf, len, ascii)		\
++	trace_print_hex_dump_seq(p, prefix_str, prefix_type,		\
++				 rowsize, groupsize, buf, len, ascii)
++
+ #undef DECLARE_EVENT_CLASS
+ #define DECLARE_EVENT_CLASS(call, proto, args, tstruct, assign, print)	\
+ static notrace enum print_line_t					\
+@@ -394,22 +401,16 @@ static struct trace_event_functions trace_event_type_funcs_##call = {	\
+ #include TRACE_INCLUDE(TRACE_INCLUDE_FILE)
+ 
+ #undef __field_ext
+-#define __field_ext(type, item, filter_type)				\
+-	ret = trace_define_field(event_call, #type, #item,		\
+-				 offsetof(typeof(field), item),		\
+-				 sizeof(field.item),			\
+-				 is_signed_type(type), filter_type);	\
+-	if (ret)							\
+-		return ret;
++#define __field_ext(_type, _item, _filter_type) {			\
++	.type = #_type, .name = #_item,					\
++	.size = sizeof(_type), .align = __alignof__(_type),		\
++	.is_signed = is_signed_type(_type), .filter_type = _filter_type },
+ 
+ #undef __field_struct_ext
+-#define __field_struct_ext(type, item, filter_type)			\
+-	ret = trace_define_field(event_call, #type, #item,		\
+-				 offsetof(typeof(field), item),		\
+-				 sizeof(field.item),			\
+-				 0, filter_type);			\
+-	if (ret)							\
+-		return ret;
++#define __field_struct_ext(_type, _item, _filter_type) {		\
++	.type = #_type, .name = #_item,					\
++	.size = sizeof(_type), .align = __alignof__(_type),		\
++	0, .filter_type = _filter_type },
+ 
+ #undef __field
+ #define __field(type, item)	__field_ext(type, item, FILTER_OTHER)
+@@ -418,25 +419,16 @@ static struct trace_event_functions trace_event_type_funcs_##call = {	\
+ #define __field_struct(type, item) __field_struct_ext(type, item, FILTER_OTHER)
+ 
+ #undef __array
+-#define __array(type, item, len)					\
+-	do {								\
+-		char *type_str = #type"["__stringify(len)"]";		\
+-		BUILD_BUG_ON(len > MAX_FILTER_STR_VAL);			\
+-		BUILD_BUG_ON(len <= 0);					\
+-		ret = trace_define_field(event_call, type_str, #item,	\
+-				 offsetof(typeof(field), item),		\
+-				 sizeof(field.item),			\
+-				 is_signed_type(type), FILTER_OTHER);	\
+-		if (ret)						\
+-			return ret;					\
+-	} while (0);
++#define __array(_type, _item, _len) {					\
++	.type = #_type"["__stringify(_len)"]", .name = #_item,		\
++	.size = sizeof(_type[_len]), .align = __alignof__(_type),	\
++	.is_signed = is_signed_type(_type), .filter_type = FILTER_OTHER },
+ 
+ #undef __dynamic_array
+-#define __dynamic_array(type, item, len)				       \
+-	ret = trace_define_field(event_call, "__data_loc " #type "[]", #item,  \
+-				 offsetof(typeof(field), __data_loc_##item),   \
+-				 sizeof(field.__data_loc_##item),	       \
+-				 is_signed_type(type), FILTER_OTHER);
++#define __dynamic_array(_type, _item, _len) {				\
++	.type = "__data_loc " #_type "[]", .name = #_item,		\
++	.size = 4, .align = 4,						\
++	.is_signed = is_signed_type(_type), .filter_type = FILTER_OTHER },
+ 
+ #undef __string
+ #define __string(item, src) __dynamic_array(char, item, -1)
+@@ -446,23 +438,12 @@ static struct trace_event_functions trace_event_type_funcs_##call = {	\
+ 
+ #undef DECLARE_EVENT_CLASS
+ #define DECLARE_EVENT_CLASS(call, proto, args, tstruct, func, print)	\
+-static int notrace __init						\
+-trace_event_define_fields_##call(struct trace_event_call *event_call)	\
+-{									\
+-	struct trace_event_raw_##call field;				\
+-	int ret;							\
+-									\
+-	tstruct;							\
+-									\
+-	return ret;							\
+-}
+-
+-#undef DEFINE_EVENT
+-#define DEFINE_EVENT(template, name, proto, args)
++static struct trace_event_fields trace_event_fields_##call[] = {	\
++	tstruct								\
++	{} };
+ 
+ #undef DEFINE_EVENT_PRINT
+-#define DEFINE_EVENT_PRINT(template, name, proto, args, print)	\
+-	DEFINE_EVENT(template, name, PARAMS(proto), PARAMS(args))
++#define DEFINE_EVENT_PRINT(template, name, proto, args, print)
+ 
+ #include TRACE_INCLUDE(TRACE_INCLUDE_FILE)
+ 
+@@ -537,19 +518,12 @@ static inline notrace int trace_event_get_offsets_##call(		\
+ 	return __data_size;						\
+ }
+ 
+-#undef DEFINE_EVENT
+-#define DEFINE_EVENT(template, name, proto, args)
+-
+-#undef DEFINE_EVENT_PRINT
+-#define DEFINE_EVENT_PRINT(template, name, proto, args, print)	\
+-	DEFINE_EVENT(template, name, PARAMS(proto), PARAMS(args))
+-
+ #include TRACE_INCLUDE(TRACE_INCLUDE_FILE)
+ 
+ /*
+  * Stage 4 of the trace events.
+  *
+- * Override the macros in <trace/trace_events.h> to include the following:
++ * Override the macros in the event tracepoint header <trace/events/XXX.h>
+  *
+  * For those macros defined with TRACE_EVENT:
+  *
+@@ -564,7 +538,7 @@ static inline notrace int trace_event_get_offsets_##call(		\
+  *	enum event_trigger_type __tt = ETT_NONE;
+  *	struct ring_buffer_event *event;
+  *	struct trace_event_raw_<call> *entry; <-- defined in stage 1
+- *	struct ring_buffer *buffer;
++ *	struct trace_buffer *buffer;
+  *	unsigned long irq_flags;
+  *	int __data_size;
+  *	int pc;
+@@ -613,7 +587,7 @@ static inline notrace int trace_event_get_offsets_##call(		\
+  *
+  * static struct trace_event_class __used event_class_<template> = {
+  *	.system			= "<system>",
+- *	.define_fields		= trace_event_define_fields_<call>,
++ *	.fields_array		= trace_event_fields_<call>,
+  *	.fields			= LIST_HEAD_INIT(event_class_##call.fields),
+  *	.raw_init		= trace_event_raw_init,
+  *	.probe			= trace_event_raw_event_##call,
+@@ -734,9 +708,6 @@ static inline void ftrace_test_probe_##call(void)			\
+ 	check_trace_callback_type_##call(trace_event_raw_event_##template); \
+ }
+ 
+-#undef DEFINE_EVENT_PRINT
+-#define DEFINE_EVENT_PRINT(template, name, proto, args, print)
+-
+ #include TRACE_INCLUDE(TRACE_INCLUDE_FILE)
+ 
+ #undef __entry
+@@ -761,7 +732,7 @@ _TRACE_PERF_PROTO(call, PARAMS(proto));					\
+ static char print_fmt_##call[] = print;					\
+ static struct trace_event_class __used __refdata event_class_##call = { \
+ 	.system			= TRACE_SYSTEM_STRING,			\
+-	.define_fields		= trace_event_define_fields_##call,	\
++	.fields_array		= trace_event_fields_##call,		\
+ 	.fields			= LIST_HEAD_INIT(event_class_##call.fields),\
+ 	.raw_init		= trace_event_raw_init,			\
+ 	.probe			= trace_event_raw_event_##call,		\
+diff --git a/compat/backport-3.10.c b/compat/backport-3.10.c
+index 8ee2bdb8..d6b1cda5 100644
+--- a/compat/backport-3.10.c
++++ b/compat/backport-3.10.c
+@@ -105,7 +105,7 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
+  * 		 		 		 		 */
+ 		*locked = 1;
+ 		lock_dropped = true;
+-		down_read(&mm->mmap_sem);
++		mmap_read_lock(mm);
+ 		ret = __get_user_pages(tsk, mm, start, 1, flags | FOLL_TRIED,
+ 				       pages, NULL, NULL);
+ 		if (ret != 1) {
+@@ -126,7 +126,7 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
+  * 		 * We must let the caller know we temporarily dropped the lock
+  * 		 		 * and so the critical section protected by it was lost.
+  * 		 		 		 */
+-		up_read(&mm->mmap_sem);
++		mmap_read_unlock(mm);
+ 		*locked = 0;
+ 	}
+ 	return pages_done;
+diff --git a/drivers/dma-buf/dma-resv.c b/drivers/dma-buf/dma-resv.c
+index 4264e647..e53f7b49 100644
+--- a/drivers/dma-buf/dma-resv.c
++++ b/drivers/dma-buf/dma-resv.c
+@@ -109,7 +109,7 @@ static int __init dma_resv_lockdep(void)
+ 
+ 	dma_resv_init(&obj);
+ 
+-	down_read(&mm->mmap_sem);
++	mmap_read_lock(mm);
+ 	ww_acquire_init(&ctx, &reservation_ww_class);
+ 	ret = dma_resv_lock(&obj, &ctx);
+ 	if (ret == -EDEADLK)
+@@ -118,7 +118,7 @@ static int __init dma_resv_lockdep(void)
+ 	fs_reclaim_release(GFP_KERNEL);
+ 	ww_mutex_unlock(&obj.lock);
+ 	ww_acquire_fini(&ctx);
+-	up_read(&mm->mmap_sem);
++	mmap_read_unlock(mm);
+ 	
+ 	mmput(mm);
+ 
+diff --git a/drivers/gpu/drm/Makefile b/drivers/gpu/drm/Makefile
+index f2ecdb19..9c2274e7 100644
+--- a/drivers/gpu/drm/Makefile
++++ b/drivers/gpu/drm/Makefile
+@@ -24,7 +24,10 @@ drm-$(CPTCFG_DRM_LIB_RANDOM) += lib/drm_random.o
+ drm-$(CPTCFG_DRM_VM) += drm_vm.o
+ drm-$(CONFIG_COMPAT) += drm_ioc32.o
+ drm-$(CPTCFG_DRM_GEM_CMA_HELPER) += drm_gem_cma_helper.o
+-drm-$(CPTCFG_DRM_GEM_SHMEM_HELPER) += drm_gem_shmem_helper.o
++
++drm_shmem_helper-y := drm_gem_shmem_helper.o
++obj-$(CONFIG_DRM_GEM_SHMEM_HELPER) += drm_shmem_helper.o
++
+ drm-$(CPTCFG_DRM_PANEL) += drm_panel.o
+ drm-$(CONFIG_OF) += drm_of.o
+ drm-$(CONFIG_AGP) += drm_agpsupport.o
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c
+index b2487f4f..caffb229 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c
+@@ -1343,9 +1343,9 @@ int amdgpu_amdkfd_gpuvm_map_memory_to_gpu(
+ 	 * concurrently and the queues are actually stopped
+ 	 */
+ 	if (amdgpu_ttm_tt_get_usermm(bo->tbo.ttm)) {
+-		down_write(&current->mm->mmap_sem);
++		mmap_write_lock(current->mm);
+ 		is_invalid_userptr = atomic_read(&mem->invalid);
+-		up_write(&current->mm->mmap_sem);
++		mmap_write_unlock(current->mm);
+ 	}
+ 
+ 	mutex_lock(&mem->lock);
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
+index a6e3560c..cb573e34 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
+@@ -838,7 +838,7 @@ int amdgpu_ttm_tt_get_user_pages(struct amdgpu_bo *bo, struct page **pages)
+ 		goto out_free_ranges;
+ 	}
+ 
+-	down_read(&mm->mmap_sem);
++	mmap_read_lock(mm);
+ 	vma = find_vma(mm, start);
+ 	if (unlikely(!vma || start < vma->vm_start)) {
+ 		r = -EFAULT;
+@@ -849,15 +849,15 @@ int amdgpu_ttm_tt_get_user_pages(struct amdgpu_bo *bo, struct page **pages)
+ 		r = -EPERM;
+ 		goto out_unlock;
+ 	}
+-	up_read(&mm->mmap_sem);
++	mmap_read_unlock(mm);
+ 	timeout = jiffies + msecs_to_jiffies(HMM_RANGE_DEFAULT_TIMEOUT);
+ 
+ retry:
+ 	range->notifier_seq = mmu_interval_read_begin(&bo->notifier);
+ 
+-	down_read(&mm->mmap_sem);
++	mmap_read_lock(mm);
+ 	r = hmm_range_fault(range, 0);
+-	up_read(&mm->mmap_sem);
++	mmap_read_unlock(mm);
+ 	if (unlikely(r <= 0)) {
+ 		/*
+ 		 * FIXME: This timeout should encompass the retry from
+@@ -886,7 +886,7 @@ retry:
+ 	return 0;
+ 
+ out_unlock:
+-	up_read(&mm->mmap_sem);
++	mmap_read_unlock(mm);
+ out_free_pfns:
+ 	kvfree(range->pfns);
+ out_free_ranges:
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_events.c b/drivers/gpu/drm/amd/amdkfd/kfd_events.c
+index 1f836557..ee474a19 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_events.c
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_events.c
+@@ -901,7 +901,7 @@ void kfd_signal_iommu_event(struct kfd_dev *dev, unsigned int pasid,
+ 
+ 	memset(&memory_exception_data, 0, sizeof(memory_exception_data));
+ 
+-	down_read(&mm->mmap_sem);
++	mmap_read_lock(mm);
+ 	vma = find_vma(mm, address);
+ 
+ 	memory_exception_data.gpu_id = dev->id;
+@@ -924,7 +924,7 @@ void kfd_signal_iommu_event(struct kfd_dev *dev, unsigned int pasid,
+ 			memory_exception_data.failure.NoExecute = 0;
+ 	}
+ 
+-	up_read(&mm->mmap_sem);
++	mmap_read_unlock(mm);
+ 	mmput(mm);
+ 
+ 	pr_debug("notpresent %d, noexecute %d, readonly %d\n",
+diff --git a/drivers/gpu/drm/bridge/sil-sii8620.c b/drivers/gpu/drm/bridge/sil-sii8620.c
+index 4c0eef40..f7c6f2b2 100644
+--- a/drivers/gpu/drm/bridge/sil-sii8620.c
++++ b/drivers/gpu/drm/bridge/sil-sii8620.c
+@@ -986,7 +986,7 @@ static void sii8620_set_auto_zone(struct sii8620 *ctx)
+ 
+ static void sii8620_stop_video(struct sii8620 *ctx)
+ {
+-	u8 uninitialized_var(val);
++	u8 val;
+ 
+ 	sii8620_write_seq_static(ctx,
+ 		REG_TPI_INTR_EN, 0,
+diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
+index cf334470..394c6c28 100644
+--- a/drivers/gpu/drm/drm_drv.c
++++ b/drivers/gpu/drm/drm_drv.c
+@@ -523,17 +523,6 @@ static int drm_fs_init_fs_context(struct fs_context *fc)
+ 	return init_pseudo(fc, 0x010203ff) ? 0 : -ENOMEM;
+ }
+ 
+-
+-
+-static const struct dentry_operations drm_fs_dops = {
+-        .d_dname        = simple_dname,
+-};
+-
+-static const struct super_operations drm_fs_sops = {
+-        .statfs         = simple_statfs,
+-};
+-
+-
+ static struct file_system_type drm_fs_type = {
+ 	.name		= "drm",
+ 	.owner		= THIS_MODULE,
+diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
+index 92dcff30..630160dd 100644
+--- a/drivers/gpu/drm/drm_edid.c
++++ b/drivers/gpu/drm/drm_edid.c
+@@ -3047,7 +3047,7 @@ static int drm_cvt_modes(struct drm_connector *connector,
+ 	const u8 empty[3] = { 0, 0, 0 };
+ 
+ 	for (i = 0; i < 4; i++) {
+-		int uninitialized_var(width), height;
++		int width, height;
+ 		cvt = &(timing->data.other_data.data.cvt[i]);
+ 
+ 		if (!memcmp(cvt->code, empty, 3))
+diff --git a/drivers/gpu/drm/drm_encoder_slave.c b/drivers/gpu/drm/drm_encoder_slave.c
+index cf804389..7d2c7302 100644
+--- a/drivers/gpu/drm/drm_encoder_slave.c
++++ b/drivers/gpu/drm/drm_encoder_slave.c
+@@ -61,13 +61,8 @@ int drm_i2c_encoder_init(struct drm_device *dev,
+ 
+ 	request_module("%s%s", I2C_MODULE_PREFIX, info->type);
+ 
+-	client = i2c_new_device(adap, info);
+-	if (!client) {
+-		err = -ENOMEM;
+-		goto fail;
+-	}
+-
+-	if (!client->dev.driver) {
++	client = i2c_new_client_device(adap, info);
++	if (!i2c_client_has_driver(client)) {
+ 		err = -ENODEV;
+ 		goto fail_unregister;
+ 	}
+@@ -95,7 +90,6 @@ int drm_i2c_encoder_init(struct drm_device *dev,
+ fail_unregister:
+ 	i2c_unregister_device(client);
+ 	module_put(module);
+-fail:
+ 	return err;
+ }
+ EXPORT_SYMBOL(drm_i2c_encoder_init);
+diff --git a/drivers/gpu/drm/drm_gem_shmem_helper.c b/drivers/gpu/drm/drm_gem_shmem_helper.c
+index a421a2ee..eec41680 100644
+--- a/drivers/gpu/drm/drm_gem_shmem_helper.c
++++ b/drivers/gpu/drm/drm_gem_shmem_helper.c
+@@ -683,3 +683,5 @@ err_free_gem:
+ 	return ERR_PTR(ret);
+ }
+ EXPORT_SYMBOL_GPL(drm_gem_shmem_prime_import_sg_table);
++
++MODULE_LICENSE("GPL");
+\ No newline at end of file
+diff --git a/drivers/gpu/drm/drm_modes.c b/drivers/gpu/drm/drm_modes.c
+index 10336b14..c9a6f98d 100644
+--- a/drivers/gpu/drm/drm_modes.c
++++ b/drivers/gpu/drm/drm_modes.c
+@@ -1320,7 +1320,7 @@ EXPORT_SYMBOL(drm_mode_prune_invalid);
+  * Negative if @lh_a is better than @lh_b, zero if they're equivalent, or
+  * positive if @lh_b is better than @lh_a.
+  */
+-static int drm_mode_compare(void *priv, struct list_head *lh_a, struct list_head *lh_b)
++static int drm_mode_compare(void *priv, const struct list_head *lh_a,const struct list_head *lh_b)
+ {
+ 	struct drm_display_mode *a = list_entry(lh_a, struct drm_display_mode, head);
+ 	struct drm_display_mode *b = list_entry(lh_b, struct drm_display_mode, head);
+diff --git a/drivers/gpu/drm/exynos/exynos_drm_dsi.c b/drivers/gpu/drm/exynos/exynos_drm_dsi.c
+index 33628d85..5000ec7f 100644
+--- a/drivers/gpu/drm/exynos/exynos_drm_dsi.c
++++ b/drivers/gpu/drm/exynos/exynos_drm_dsi.c
+@@ -546,9 +546,9 @@ static unsigned long exynos_dsi_pll_find_pms(struct exynos_dsi *dsi,
+ 	unsigned long best_freq = 0;
+ 	u32 min_delta = 0xffffffff;
+ 	u8 p_min, p_max;
+-	u8 _p, uninitialized_var(best_p);
+-	u16 _m, uninitialized_var(best_m);
+-	u8 _s, uninitialized_var(best_s);
++	u8 _p, best_p;
++	u16 _m, best_m;
++	u8 _s, best_s;
+ 
+ 	p_min = DIV_ROUND_UP(fin, (12 * MHZ));
+ 	p_max = fin / (6 * MHZ);
+diff --git a/drivers/gpu/drm/i915/display/intel_display.c b/drivers/gpu/drm/i915/display/intel_display.c
+index b3de21a0..f826df18 100644
+--- a/drivers/gpu/drm/i915/display/intel_display.c
++++ b/drivers/gpu/drm/i915/display/intel_display.c
+@@ -26,7 +26,7 @@
+ 
+ #include <linux/i2c.h>
+ #include <linux/input.h>
+-#include <linux/intel-iommu.h>
++//#include <linux/intel-iommu.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/dma-resv.h>
+@@ -15511,7 +15511,7 @@ static void intel_crtc_enable_trans_port_sync(struct intel_crtc *crtc,
+ static void intel_set_dp_tp_ctl_normal(struct intel_crtc *crtc,
+ 				       struct intel_atomic_state *state)
+ {
+-	struct drm_connector *uninitialized_var(conn);
++	struct drm_connector *conn;
+ 	struct drm_connector_state *conn_state;
+ 	struct intel_dp *intel_dp;
+ 	int i;
+diff --git a/drivers/gpu/drm/i915/display/intel_fbc.c b/drivers/gpu/drm/i915/display/intel_fbc.c
+index f02308f6..5f91aeaa 100644
+--- a/drivers/gpu/drm/i915/display/intel_fbc.c
++++ b/drivers/gpu/drm/i915/display/intel_fbc.c
+@@ -466,7 +466,7 @@ static int intel_fbc_alloc_cfb(struct drm_i915_private *dev_priv,
+ {
+ 	struct intel_memory_region *mem = i915_stolen_region(dev_priv);
+ 	struct intel_fbc *fbc = &dev_priv->fbc;
+-	struct drm_mm_node *uninitialized_var(compressed_llb);
++	struct drm_mm_node *compressed_llb;
+ 	int ret;
+ 
+ 	drm_WARN_ON(&dev_priv->drm,
+diff --git a/drivers/gpu/drm/i915/display/intel_hdmi.c b/drivers/gpu/drm/i915/display/intel_hdmi.c
+index 3bf8e54b..5a257b93 100644
+--- a/drivers/gpu/drm/i915/display/intel_hdmi.c
++++ b/drivers/gpu/drm/i915/display/intel_hdmi.c
+@@ -2869,8 +2869,8 @@ intel_hdmi_connector_register(struct drm_connector *connector)
+ static void intel_hdmi_destroy(struct drm_connector *connector)
+ {
+ 	struct cec_notifier *n = intel_attached_hdmi(to_intel_connector(connector))->cec_notifier;
+-	if(n)
+-		cec_notifier_put(n);
++
++	cec_notifier_conn_unregister(n);
+ 
+ 	intel_connector_destroy(connector);
+ }
+@@ -3214,7 +3214,8 @@ void intel_hdmi_init_connector(struct intel_digital_port *intel_dig_port,
+ 	struct drm_i915_private *dev_priv = to_i915(dev);
+ 	struct i2c_adapter *ddc;
+ 	enum port port = intel_encoder->port;
+-
++	struct cec_connector_info conn_info;
++	
+ 	drm_dbg_kms(&dev_priv->drm,
+ 		    "Adding HDMI connector on [ENCODER:%d:%s]\n",
+ 		    intel_encoder->base.base.id, intel_encoder->base.name);
+@@ -3274,7 +3275,11 @@ void intel_hdmi_init_connector(struct intel_digital_port *intel_dig_port,
+ 		               (temp & ~0xf) | 0xd);
+ 	}
+ 
+-	intel_hdmi->cec_notifier = cec_notifier_get(dev->dev);
++	cec_fill_conn_info_from_drm(&conn_info, connector);
++
++	intel_hdmi->cec_notifier =
++		cec_notifier_conn_register(dev->dev, port_identifier(port),
++					   &conn_info);
+ 	if (!intel_hdmi->cec_notifier)
+ 		drm_dbg_kms(&dev_priv->drm, "CEC notifier get failed\n");
+ }
+diff --git a/drivers/gpu/drm/i915/display/intel_lpe_audio.c b/drivers/gpu/drm/i915/display/intel_lpe_audio.c
+index ad5cc130..6a235ca9 100644
+--- a/drivers/gpu/drm/i915/display/intel_lpe_audio.c
++++ b/drivers/gpu/drm/i915/display/intel_lpe_audio.c
+@@ -302,7 +302,7 @@ void intel_lpe_audio_teardown(struct drm_i915_private *dev_priv)
+ 	if (!HAS_LPE_AUDIO(dev_priv))
+ 		return;
+ 
+-	desc = irq_to_desc(dev_priv->lpe_audio.irq);
++	desc = irq_data_to_desc( irq_get_irq_data(dev_priv->lpe_audio.irq));
+ 
+ 	lpe_audio_platdev_destroy(dev_priv);
+ 
+diff --git a/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c b/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
+index 46998372..9a19fb2e 100644
+--- a/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
++++ b/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
+@@ -4,7 +4,7 @@
+  * Copyright © 2008,2010 Intel Corporation
+  */
+ 
+-#include <linux/intel-iommu.h>
++//#include <linux/intel-iommu.h>
+ #include <linux/dma-resv.h>
+ #include <linux/sync_file.h>
+ #include <linux/uaccess.h>
+diff --git a/drivers/gpu/drm/i915/gem/i915_gem_mman.c b/drivers/gpu/drm/i915/gem/i915_gem_mman.c
+index c422ca5d..f678d813 100644
+--- a/drivers/gpu/drm/i915/gem/i915_gem_mman.c
++++ b/drivers/gpu/drm/i915/gem/i915_gem_mman.c
+@@ -93,7 +93,7 @@ i915_gem_mmap_ioctl(struct drm_device *dev, void *data,
+ 		struct mm_struct *mm = current->mm;
+ 		struct vm_area_struct *vma;
+ 
+-		if (down_write_killable(&mm->mmap_sem)) {
++		if (mmap_write_lock_killable(mm)) {
+ 			addr = -EINTR;
+ 			goto err;
+ 		}
+@@ -103,7 +103,7 @@ i915_gem_mmap_ioctl(struct drm_device *dev, void *data,
+ 				pgprot_writecombine(vm_get_page_prot(vma->vm_flags));
+ 		else
+ 			addr = -ENOMEM;
+-		up_write(&mm->mmap_sem);
++		mmap_write_unlock(mm);
+ 		if (IS_ERR_VALUE(addr))
+ 			goto err;
+ 	}
+diff --git a/drivers/gpu/drm/i915/gem/i915_gem_object.h b/drivers/gpu/drm/i915/gem/i915_gem_object.h
+index 8304eb7c..2b184a9e 100644
+--- a/drivers/gpu/drm/i915/gem/i915_gem_object.h
++++ b/drivers/gpu/drm/i915/gem/i915_gem_object.h
+@@ -391,8 +391,7 @@ enum i915_map_type {
+  */
+ void *__must_check i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+ 					   enum i915_map_type type);
+-void *__must_check i915_gem_object_try_pin_map(struct drm_i915_gem_object *obj,
+-					       enum i915_map_type type);
++
+ 
+ void __i915_gem_object_flush_map(struct drm_i915_gem_object *obj,
+ 				 unsigned long offset,
+diff --git a/drivers/gpu/drm/i915/gem/i915_gem_pages.c b/drivers/gpu/drm/i915/gem/i915_gem_pages.c
+index 1dd361db..77457cca 100644
+--- a/drivers/gpu/drm/i915/gem/i915_gem_pages.c
++++ b/drivers/gpu/drm/i915/gem/i915_gem_pages.c
+@@ -278,53 +278,41 @@ int __i915_gem_object_put_pages(struct drm_i915_gem_object *obj)
+ 	return err;
+ }
+ 
+-static inline pte_t iomap_pte(resource_size_t base,
+-			      dma_addr_t offset,
+-			      pgprot_t prot)
+-{
+-	return pte_mkspecial(pfn_pte((base + offset) >> PAGE_SHIFT, prot));
+-}
+ 
+ /* The 'mapping' part of i915_gem_object_pin_map() below */
+-static void *i915_gem_object_map(struct drm_i915_gem_object *obj,
+-				 enum i915_map_type type)
++static void *i915_gem_object_map_page(struct drm_i915_gem_object *obj,
++		enum i915_map_type type)
+ {
+-	unsigned long n_pte = obj->base.size >> PAGE_SHIFT;
+-	struct sg_table *sgt = obj->mm.pages;
+-	pte_t *stack[32], **mem;
+-	struct vm_struct *area;
++	unsigned long n_pages = obj->base.size >> PAGE_SHIFT, i;
++	struct page *stack[32], **pages = stack, *page;
++	struct sgt_iter iter;
+ 	pgprot_t pgprot;
+-
+-	/* FIXME: Objects in LMEM are expected to mapped WC type. */
+-	WARN_ON (!i915_gem_object_has_struct_page(obj) && type != I915_MAP_WC);
+-
+-	if (!i915_gem_object_has_struct_page(obj) && type != I915_MAP_WC)
+-		return NULL;
+-
+-	/* A single page can always be kmapped */
+-	if (n_pte == 1 && type == I915_MAP_WB)
+-		return kmap(sg_page(sgt->sgl));
+-
+-	mem = stack;
+-	if (n_pte > ARRAY_SIZE(stack)) {
+-		/* Too big for stack -- allocate temporary array instead */
+-		mem = kvmalloc_array(n_pte, sizeof(*mem), GFP_KERNEL);
+-		if (!mem)
+-			return NULL;
+-	}
+-
+-	area = alloc_vm_area(obj->base.size, mem);
+-	if (!area) {
+-		if (mem != stack)
+-			kvfree(mem);
+-		return NULL;
+-	}
++	void *vaddr;
+ 
+ 	switch (type) {
+ 	default:
+ 		MISSING_CASE(type);
+-		/* fallthrough - to use PAGE_KERNEL anyway */
++		fallthrough;	/* to use PAGE_KERNEL anyway */
+ 	case I915_MAP_WB:
++		/*
++		 * On 32b, highmem using a finite set of indirect PTE (i.e.
++		 * vmap) to provide virtual mappings of the high pages.
++		 * As these are finite, map_new_virtual() must wait for some
++		 * other kmap() to finish when it runs out. If we map a large
++		 * number of objects, there is no method for it to tell us
++		 * to release the mappings, and we deadlock.
++		 *
++		 * However, if we make an explicit vmap of the page, that
++		 * uses a larger vmalloc arena, and also has the ability
++		 * to tell us to release unwanted mappings. Most importantly,
++		 * it will fail and propagate an error instead of waiting
++		 * forever.
++		 *
++		 * So if the page is beyond the 32b boundary, make an explicit
++		 * vmap.
++		 */
++		if (n_pages == 1 && !PageHighMem(sg_page(obj->mm.pages->sgl)))
++			return page_address(sg_page(obj->mm.pages->sgl));
+ 		pgprot = PAGE_KERNEL;
+ 		break;
+ 	case I915_MAP_WC:
+@@ -332,32 +320,51 @@ static void *i915_gem_object_map(struct drm_i915_gem_object *obj,
+ 		break;
+ 	}
+ 
+-	if (i915_gem_object_has_struct_page(obj)) {
+-		struct sgt_iter iter;
+-		struct page *page;
+-		pte_t **ptes = mem;
++	if (n_pages > ARRAY_SIZE(stack)) {
++		/* Too big for stack -- allocate temporary array instead */
++		pages = kvmalloc_array(n_pages, sizeof(*pages), GFP_KERNEL);
++		if (!pages)
++			return NULL;
++	}
+ 
+-		for_each_sgt_page(page, iter, sgt)
+-			**ptes++ = mk_pte(page, pgprot);
+-	} else {
+-		resource_size_t iomap;
+-		struct sgt_iter iter;
+-		pte_t **ptes = mem;
+-		dma_addr_t addr;
++	i = 0;
++	for_each_sgt_page(page, iter, obj->mm.pages)
++		pages[i++] = page;
++	vaddr = vmap(pages, n_pages, 0, pgprot);
++	if (pages != stack)
++		kvfree(pages);
++	return vaddr;
++}
+ 
+-		iomap = obj->mm.region->iomap.base;
+-		iomap -= obj->mm.region->region.start;
++static void *i915_gem_object_map_pfn(struct drm_i915_gem_object *obj,
++		enum i915_map_type type)
++{
++	resource_size_t iomap = obj->mm.region->iomap.base -
++		obj->mm.region->region.start;
++	unsigned long n_pfn = obj->base.size >> PAGE_SHIFT;
++	unsigned long stack[32], *pfns = stack, i;
++	struct sgt_iter iter;
++	dma_addr_t addr;
++	void *vaddr;
++
++	if (type != I915_MAP_WC)
++		return NULL;
+ 
+-		for_each_sgt_daddr(addr, iter, sgt)
+-			**ptes++ = iomap_pte(iomap, addr, pgprot);
++	if (n_pfn > ARRAY_SIZE(stack)) {
++		/* Too big for stack -- allocate temporary array instead */
++		pfns = kvmalloc_array(n_pfn, sizeof(*pfns), GFP_KERNEL);
++		if (!pfns)
++			return NULL;
+ 	}
+ 
+-	if (mem != stack)
+-		kvfree(mem);
+-
+-	return area->addr;
++	i = 0;
++	for_each_sgt_daddr(addr, iter, obj->mm.pages)
++		pfns[i++] = (iomap + addr) >> PAGE_SHIFT;
++	vaddr = vmap_pfn(pfns, n_pfn, pgprot_writecombine(PAGE_KERNEL_IO));
++	if (pfns != stack)
++		kvfree(pfns);
++	return vaddr;
+ }
+-
+ /* get, pin, and map the pages of the object into kernel space */
+ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+ 			      enum i915_map_type type)
+@@ -407,7 +414,13 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+ 	}
+ 
+ 	if (!ptr) {
+-		ptr = i915_gem_object_map(obj, type);
++		if (GEM_WARN_ON(type == I915_MAP_WC &&
++				!static_cpu_has(X86_FEATURE_PAT)))
++			ptr = NULL;
++		else if (i915_gem_object_has_struct_page(obj))
++			ptr = i915_gem_object_map_page(obj, type);
++		else
++			ptr = i915_gem_object_map_pfn(obj, type);
+ 		if (!ptr) {
+ 			err = -ENOMEM;
+ 			goto err_unpin;
+@@ -427,73 +440,7 @@ err_unlock:
+ 	goto out_unlock;
+ }
+ 
+-/* get, pin, and map the pages of the object into kernel space */
+-void *i915_gem_object_try_pin_map(struct drm_i915_gem_object *obj,
+-				  enum i915_map_type type)
+-{
+-	enum i915_map_type has_type;
+-	unsigned int flags;
+-	bool pinned;
+-	void *ptr;
+-	int err;
+-
+-	flags = I915_GEM_OBJECT_HAS_STRUCT_PAGE | I915_GEM_OBJECT_HAS_IOMEM;
+-	if (!i915_gem_object_type_has(obj, flags))
+-		return ERR_PTR(-ENXIO);
+-
+-	if (!mutex_trylock(&obj->mm.lock))
+-		return ERR_PTR(-EBUSY);
+-
+-	pinned = !(type & I915_MAP_OVERRIDE);
+-	type &= ~I915_MAP_OVERRIDE;
+-
+-	if (!atomic_inc_not_zero(&obj->mm.pages_pin_count)) {
+-		if (unlikely(!i915_gem_object_has_pages(obj))) {
+-			GEM_BUG_ON(i915_gem_object_has_pinned_pages(obj));
+-
+-			err = ____i915_gem_object_get_pages(obj);
+-			if (err)
+-				goto err_unlock;
+-
+-			smp_mb__before_atomic();
+-		}
+-		atomic_inc(&obj->mm.pages_pin_count);
+-		pinned = false;
+-	}
+-	GEM_BUG_ON(!i915_gem_object_has_pages(obj));
+-
+-	ptr = page_unpack_bits(obj->mm.mapping, &has_type);
+-	if (ptr && has_type != type) {
+-		if (pinned) {
+-			err = -EBUSY;
+-			goto err_unpin;
+-		}
+ 
+-		unmap_object(obj, ptr);
+-
+-		ptr = obj->mm.mapping = NULL;
+-	}
+-
+-	if (!ptr) {
+-		ptr = i915_gem_object_map(obj, type);
+-		if (!ptr) {
+-			err = -ENOMEM;
+-			goto err_unpin;
+-		}
+-
+-		obj->mm.mapping = page_pack_bits(ptr, type);
+-	}
+-
+-out_unlock:
+-	mutex_unlock(&obj->mm.lock);
+-	return ptr;
+-
+-err_unpin:
+-	atomic_dec(&obj->mm.pages_pin_count);
+-err_unlock:
+-	ptr = ERR_PTR(err);
+-	goto out_unlock;
+-}
+ 
+ void __i915_gem_object_flush_map(struct drm_i915_gem_object *obj,
+ 				 unsigned long offset,
+diff --git a/drivers/gpu/drm/i915/gem/i915_gem_shmem.c b/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
+index 26002472..61bd2db2 100644
+--- a/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
++++ b/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
+@@ -259,8 +259,8 @@ shmem_writeback(struct drm_i915_gem_object *obj)
+ 	for (i = 0; i < obj->base.size >> PAGE_SHIFT; i++) {
+ 		struct page *page;
+ 
+-		page = find_lock_entry(mapping, i);
+-		if (!page || xa_is_value(page))
++		page = find_lock_page(mapping, i);
++		if (!page)
+ 			continue;
+ 
+ 		if (!page_mapped(page) && clear_page_dirty_for_io(page)) {
+diff --git a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c b/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
+index d62a71da..a971f2b9 100644
+--- a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
++++ b/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
+@@ -82,29 +82,32 @@ __i915_gem_userptr_set_active(struct drm_i915_gem_object *obj, bool value)
+ 		del_object(mo);
+ 	spin_unlock(&mo->mn->lock);
+ }
+-
+-static void 
++static int
+ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
+-                                  struct mm_struct *mm,
+-                                  unsigned long start,
+-                                  unsigned long end)
++				  const struct mmu_notifier_range *range)
+ {
+ 	struct i915_mmu_notifier *mn =
+ 		container_of(_mn, struct i915_mmu_notifier, mn);
+ 	struct interval_tree_node *it;
++	unsigned long end;
+ 	int ret = 0;
+ 
+ 	if (RB_EMPTY_ROOT(&mn->objects.rb_root))
+ 		return 0;
+ 
+ 	/* interval ranges are inclusive, but invalidate range is exclusive */
+-	end = end - 1;
++	end = range->end - 1;
+ 
+ 	spin_lock(&mn->lock);
+-	it = interval_tree_iter_first(&mn->objects, start, end);
++	it = interval_tree_iter_first(&mn->objects, range->start, end);
+ 	while (it) {
+ 		struct drm_i915_gem_object *obj;
+ 
++		if (!mmu_notifier_range_blockable(range)) {
++			ret = -EAGAIN;
++			break;
++		}
++
+ 		/*
+ 		 * The mmu_object is released late when destroying the
+ 		 * GEM object so it is entirely possible to gain a
+@@ -117,7 +120,7 @@ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
+ 		 */
+ 		obj = container_of(it, struct i915_mmu_object, it)->obj;
+ 		if (!kref_get_unless_zero(&obj->base.refcount)) {
+-			it = interval_tree_iter_next(it, start, end);
++			it = interval_tree_iter_next(it, range->start, end);
+ 			continue;
+ 		}
+ 		spin_unlock(&mn->lock);
+@@ -129,7 +132,7 @@ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
+ 			ret = __i915_gem_object_put_pages(obj);
+ 		i915_gem_object_put(obj);
+ 		if (ret)
+-			return ret ;
++			return ret;
+ 
+ 		spin_lock(&mn->lock);
+ 
+@@ -138,11 +141,11 @@ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
+ 		 * over this range, there is no guarantee that this search will
+ 		 * terminate given a pathologic workload.
+ 		 */
+-		it = interval_tree_iter_first(&mn->objects, start, end);
++		it = interval_tree_iter_first(&mn->objects, range->start, end);
+ 	}
+ 	spin_unlock(&mn->lock);
+ 
+-	return 0;
++	return ret;
+ 
+ }
+ 
+@@ -196,7 +199,7 @@ i915_mmu_notifier_find(struct i915_mm_struct *mm)
+ 	if (IS_ERR(mn))
+ 		err = PTR_ERR(mn);
+ 
+-	down_write(&mm->mm->mmap_sem);
++	mmap_write_lock(mm->mm);
+ 	mutex_lock(&mm->i915->mm_lock);
+ 	if (mm->mn == NULL && !err) {
+ 		/* Protected by mmap_sem (write-lock) */
+@@ -213,7 +216,7 @@ i915_mmu_notifier_find(struct i915_mm_struct *mm)
+ 		err = 0;
+ 	}
+ 	mutex_unlock(&mm->i915->mm_lock);
+-	up_write(&mm->mm->mmap_sem);
++	mmap_write_unlock(mm->mm);
+ 
+ 	if (mn && !IS_ERR(mn))
+ 		kfree(mn);
+@@ -465,11 +468,11 @@ __i915_gem_userptr_get_pages_worker(struct work_struct *_work)
+ 		if (mmget_not_zero(mm)) {
+ 			while (pinned < npages) {
+ 				if (!locked) {
+-					down_read(&mm->mmap_sem);
++					mmap_write_lock(mm);
+ 					locked = 1;
+ 				}
+ 				ret = get_user_pages_remote
+-					(work->task, mm,
++					(mm,
+ 					 obj->userptr.ptr + pinned * PAGE_SIZE,
+ 					 npages - pinned,
+ 					 flags,
+@@ -480,7 +483,7 @@ __i915_gem_userptr_get_pages_worker(struct work_struct *_work)
+ 				pinned += ret;
+ 			}
+ 			if (locked)
+-				up_read(&mm->mmap_sem);
++				mmap_write_unlock(mm);
+ 			mmput(mm);
+ 		}
+ 	}
+@@ -596,7 +599,7 @@ static int i915_gem_userptr_get_pages(struct drm_i915_gem_object *obj)
+ 				      __GFP_NORETRY |
+ 				      __GFP_NOWARN);
+ 		if (pvec) /* defer to worker if malloc fails */
+-			pinned = __get_user_pages_fast(obj->userptr.ptr,
++			pinned = get_user_pages_fast(obj->userptr.ptr,
+ 						       num_pages,
+ 						       !i915_gem_object_is_readonly(obj),
+ 						       pvec);
+diff --git a/drivers/gpu/drm/i915/gt/intel_engine_user.c b/drivers/gpu/drm/i915/gt/intel_engine_user.c
+index 4f60c4e9..d6ae47dc 100644
+--- a/drivers/gpu/drm/i915/gt/intel_engine_user.c
++++ b/drivers/gpu/drm/i915/gt/intel_engine_user.c
+@@ -49,7 +49,7 @@ static const u8 uabi_classes[] = {
+ 	[VIDEO_ENHANCEMENT_CLASS] = I915_ENGINE_CLASS_VIDEO_ENHANCE,
+ };
+ 
+-static int engine_cmp(void *priv, struct list_head *A, struct list_head *B)
++static int engine_cmp(void *priv, const struct list_head *A, const struct list_head *B)
+ {
+ 	const struct intel_engine_cs *a =
+ 		container_of((struct rb_node *)A, typeof(*a), uabi_node);
+diff --git a/drivers/gpu/drm/i915/gt/intel_ggtt.c b/drivers/gpu/drm/i915/gt/intel_ggtt.c
+index b7fdccb1..2317f909 100644
+--- a/drivers/gpu/drm/i915/gt/intel_ggtt.c
++++ b/drivers/gpu/drm/i915/gt/intel_ggtt.c
+@@ -811,8 +811,8 @@ static int ggtt_probe_common(struct i915_ggtt *ggtt, u64 size)
+ 	 * resort to an uncached mapping. The WC issue is easily caught by the
+ 	 * readback check when writing GTT PTE entries.
+ 	 */
+-	if (IS_GEN9_LP(i915) || INTEL_GEN(i915) >= 10)
+-		ggtt->gsm = ioremap_nocache(phys_addr, size);
++	if (IS_GEN9_LP(i915) || INTEL_GEN(i915) >= 11)
++		ggtt->gsm = ioremap(phys_addr, size);
+ 	else
+ 		ggtt->gsm = ioremap_wc(phys_addr, size);
+ 	if (!ggtt->gsm) {
+diff --git a/drivers/gpu/drm/i915/gt/intel_lrc.c b/drivers/gpu/drm/i915/gt/intel_lrc.c
+index 59d5837f..e1f1cafb 100644
+--- a/drivers/gpu/drm/i915/gt/intel_lrc.c
++++ b/drivers/gpu/drm/i915/gt/intel_lrc.c
+@@ -1108,7 +1108,7 @@ static struct i915_request *
+ __unwind_incomplete_requests(struct intel_engine_cs *engine)
+ {
+ 	struct i915_request *rq, *rn, *active = NULL;
+-	struct list_head *uninitialized_var(pl);
++	struct list_head *pl;
+ 	int prio = I915_PRIORITY_INVALID;
+ 
+ 	lockdep_assert_held(&engine->active.lock);
+diff --git a/drivers/gpu/drm/i915/gt/shmem_utils.c b/drivers/gpu/drm/i915/gt/shmem_utils.c
+index 82ae9653..86b115d2 100644
+--- a/drivers/gpu/drm/i915/gt/shmem_utils.c
++++ b/drivers/gpu/drm/i915/gt/shmem_utils.c
+@@ -49,11 +49,6 @@ struct file *shmem_create_from_object(struct drm_i915_gem_object *obj)
+ 	return file;
+ }
+ 
+-static size_t shmem_npte(struct file *file)
+-{
+-	return file->f_mapping->host->i_size >> PAGE_SHIFT;
+-}
+-
+ static void __shmem_unpin_map(struct file *file, void *ptr, size_t n_pte)
+ {
+ 	unsigned long pfn;
+@@ -74,55 +69,38 @@ static void __shmem_unpin_map(struct file *file, void *ptr, size_t n_pte)
+ 
+ void *shmem_pin_map(struct file *file)
+ {
+-	const size_t n_pte = shmem_npte(file);
+-	pte_t *stack[32], **ptes, **mem;
+-	struct vm_struct *area;
+-	unsigned long pfn;
++	struct page **pages;
++	size_t n_pages, i;
++	void *vaddr;
+ 
+-	mem = stack;
+-	if (n_pte > ARRAY_SIZE(stack)) {
+-		mem = kvmalloc_array(n_pte, sizeof(*mem), GFP_KERNEL);
+-		if (!mem)
+-			return NULL;
+-	}
+-
+-	area = alloc_vm_area(n_pte << PAGE_SHIFT, mem);
+-	if (!area) {
+-		if (mem != stack)
+-			kvfree(mem);
++	n_pages = file->f_mapping->host->i_size >> PAGE_SHIFT;
++	pages = kvmalloc_array(n_pages, sizeof(*pages), GFP_KERNEL);
++	if (!pages)
+ 		return NULL;
+-	}
+ 
+-	ptes = mem;
+-	for (pfn = 0; pfn < n_pte; pfn++) {
+-		struct page *page;
+-
+-		page = shmem_read_mapping_page_gfp(file->f_mapping, pfn,
+-						   GFP_KERNEL);
+-		if (IS_ERR(page))
++	for (i = 0; i < n_pages; i++) {
++		pages[i] = shmem_read_mapping_page_gfp(file->f_mapping, i,
++						       GFP_KERNEL);
++		if (IS_ERR(pages[i]))
+ 			goto err_page;
+-
+-		**ptes++ = mk_pte(page,  PAGE_KERNEL);
+ 	}
+ 
+-	if (mem != stack)
+-		kvfree(mem);
+-
++	vaddr = vmap(pages, n_pages, VM_MAP_PUT_PAGES, PAGE_KERNEL);
++	if (!vaddr)
++		goto err_page;
+ 	mapping_set_unevictable(file->f_mapping);
+-	return area->addr;
+-
++	return vaddr;
+ err_page:
+-	if (mem != stack)
+-		kvfree(mem);
+-
+-	__shmem_unpin_map(file, area->addr, pfn);
++	while (i--)
++		put_page(pages[i]);
++	kvfree(pages);
+ 	return NULL;
+ }
+ 
+ void shmem_unpin_map(struct file *file, void *ptr)
+ {
+ 	mapping_clear_unevictable(file->f_mapping);
+-	__shmem_unpin_map(file, ptr, shmem_npte(file));
++	vfree(ptr);
+ }
+ 
+ static int __shmem_rw(struct file *file, loff_t off,
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_uc_debugfs.c b/drivers/gpu/drm/i915/gt/uc/intel_uc_debugfs.c
+index 089d9866..ebb0be65 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_uc_debugfs.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_uc_debugfs.c
+@@ -4,8 +4,11 @@
+  */
+ 
+ #include <linux/debugfs.h>
++#include <linux/string_helpers.h>
++
+ #include <drm/drm_print.h>
+ 
++
+ #include "gt/debugfs_gt.h"
+ #include "intel_guc_debugfs.h"
+ #include "intel_huc_debugfs.h"
+@@ -18,17 +21,17 @@ static int uc_usage_show(struct seq_file *m, void *data)
+ 	struct drm_printer p = drm_seq_file_printer(m);
+ 
+ 	drm_printf(&p, "[guc] supported:%s wanted:%s used:%s\n",
+-		   yesno(intel_uc_supports_guc(uc)),
+-		   yesno(intel_uc_wants_guc(uc)),
+-		   yesno(intel_uc_uses_guc(uc)));
++		   str_yes_no(intel_uc_supports_guc(uc)),
++		   str_yes_no(intel_uc_wants_guc(uc)),
++		   str_yes_no(intel_uc_uses_guc(uc)));
+ 	drm_printf(&p, "[huc] supported:%s wanted:%s used:%s\n",
+-		   yesno(intel_uc_supports_huc(uc)),
+-		   yesno(intel_uc_wants_huc(uc)),
+-		   yesno(intel_uc_uses_huc(uc)));
++		   str_yes_no(intel_uc_supports_huc(uc)),
++		   str_yes_no(intel_uc_wants_huc(uc)),
++		   str_yes_no(intel_uc_uses_huc(uc)));
+ 	drm_printf(&p, "[submission] supported:%s wanted:%s used:%s\n",
+-		   yesno(intel_uc_supports_guc_submission(uc)),
+-		   yesno(intel_uc_wants_guc_submission(uc)),
+-		   yesno(intel_uc_uses_guc_submission(uc)));
++		   str_yes_no(intel_uc_supports_guc_submission(uc)),
++		   str_yes_no(intel_uc_wants_guc_submission(uc)),
++		   str_yes_no(intel_uc_uses_guc_submission(uc)));
+ 
+ 	return 0;
+ }
+diff --git a/drivers/gpu/drm/i915/gvt/debugfs.c b/drivers/gpu/drm/i915/gvt/debugfs.c
+index 285f6011..b53642d6 100644
+--- a/drivers/gpu/drm/i915/gvt/debugfs.c
++++ b/drivers/gpu/drm/i915/gvt/debugfs.c
+@@ -41,7 +41,7 @@ struct diff_mmio {
+ 
+ /* Compare two diff_mmio items. */
+ static int mmio_offset_compare(void *priv,
+-	struct list_head *a, struct list_head *b)
++	const struct list_head *a, const struct list_head *b)
+ {
+ 	struct diff_mmio *ma;
+ 	struct diff_mmio *mb;
+diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
+index d8301806..12dc87be 100644
+--- a/drivers/gpu/drm/i915/i915_drv.h
++++ b/drivers/gpu/drm/i915/i915_drv.h
+@@ -38,7 +38,7 @@
+ #include <linux/i2c-algo-bit.h>
+ #include <linux/backlight.h>
+ #include <linux/hash.h>
+-#include <linux/intel-iommu.h>
++//#include <linux/intel-iommu.h>
+ #include <linux/kref.h>
+ #include <linux/mm_types.h>
+ #include <linux/perf_event.h>
+@@ -1820,8 +1820,8 @@ extern const struct i915_rev_steppings kbl_revids[];
+ static inline bool intel_vtd_active(void)
+ {
+ #ifdef CONFIG_INTEL_IOMMU
+-	if (intel_iommu_gfx_mapped)
+-		return true;
++	//if (intel_iommu_gfx_mapped)
++	//	return true;
+ #endif
+ 	return false;
+ }
+diff --git a/drivers/gpu/drm/i915/i915_gpu_error.c b/drivers/gpu/drm/i915/i915_gpu_error.c
+index 941dbe96..50ba8526 100644
+--- a/drivers/gpu/drm/i915/i915_gpu_error.c
++++ b/drivers/gpu/drm/i915/i915_gpu_error.c
+@@ -1717,7 +1717,7 @@ static void capture_gen(struct i915_gpu_coredump *error)
+ 
+ 	error->iommu = -1;
+ #ifdef CONFIG_INTEL_IOMMU
+-	error->iommu = intel_iommu_gfx_mapped;
++//	error->iommu = intel_iommu_gfx_mapped;
+ #endif
+ 	error->reset_count = i915_reset_count(&i915->gpu_error);
+ 	error->suspend_count = i915->suspend_count;
+diff --git a/drivers/gpu/drm/i915/i915_ioc32.c b/drivers/gpu/drm/i915/i915_ioc32.c
+index df7d19bd..687233ad 100644
+--- a/drivers/gpu/drm/i915/i915_ioc32.c
++++ b/drivers/gpu/drm/i915/i915_ioc32.c
+@@ -45,20 +45,16 @@ static int compat_i915_getparam(struct file *file, unsigned int cmd,
+ 				unsigned long arg)
+ {
+ 	struct drm_i915_getparam32 req32;
+-	drm_i915_getparam_t __user *request;
++	struct drm_i915_getparam req;
+ 
+ 	if (copy_from_user(&req32, (void __user *)arg, sizeof(req32)))
+ 		return -EFAULT;
+ 
+-	request = compat_alloc_user_space(sizeof(*request));
+-	if (!access_ok(request, sizeof(*request)) ||
+-	    __put_user(req32.param, &request->param) ||
+-	    __put_user((void __user *)(unsigned long)req32.value,
+-		       &request->value))
+-		return -EFAULT;
++	req.param = req32.param;
++	req.value = compat_ptr(req32.value);
+ 
+-	return drm_ioctl(file, DRM_IOCTL_I915_GETPARAM,
+-			 (unsigned long)request);
++	return drm_ioctl_kernel(file, i915_getparam_ioctl, &req,
++				DRM_RENDER_ALLOW);
+ }
+ 
+ static drm_ioctl_compat_t *i915_compat_ioctls[] = {
+diff --git a/drivers/gpu/drm/i915/i915_pmu.c b/drivers/gpu/drm/i915/i915_pmu.c
+index 3489ff56..790aa5b9 100644
+--- a/drivers/gpu/drm/i915/i915_pmu.c
++++ b/drivers/gpu/drm/i915/i915_pmu.c
+@@ -427,7 +427,7 @@ static enum hrtimer_restart i915_sample(struct hrtimer *hrtimer)
+ static u64 count_interrupts(struct drm_i915_private *i915)
+ {
+ 	/* open-coded kstat_irqs() */
+-	struct irq_desc *desc = irq_to_desc(i915->drm.pdev->irq);
++	struct irq_desc *desc = irq_data_to_desc( irq_get_irq_data(i915->drm.pdev->irq));
+ 	u64 sum = 0;
+ 	int cpu;
+ 
+diff --git a/drivers/gpu/drm/i915/intel_device_info.c b/drivers/gpu/drm/i915/intel_device_info.c
+index a6ce64f4..b51fe986 100644
+--- a/drivers/gpu/drm/i915/intel_device_info.c
++++ b/drivers/gpu/drm/i915/intel_device_info.c
+@@ -82,7 +82,7 @@ static const char *iommu_name(void)
+ 	const char *msg = "n/a";
+ 
+ #ifdef CONFIG_INTEL_IOMMU
+-	msg = enableddisabled(intel_iommu_gfx_mapped);
++	//msg = enableddisabled(intel_iommu_gfx_mapped);
+ #endif
+ 
+ 	return msg;
+diff --git a/drivers/gpu/drm/i915/intel_uncore.c b/drivers/gpu/drm/i915/intel_uncore.c
+index 55b34902..94e9435b 100644
+--- a/drivers/gpu/drm/i915/intel_uncore.c
++++ b/drivers/gpu/drm/i915/intel_uncore.c
+@@ -1991,7 +1991,7 @@ int __intel_wait_for_register_fw(struct intel_uncore *uncore,
+ 				 unsigned int slow_timeout_ms,
+ 				 u32 *out_value)
+ {
+-	u32 uninitialized_var(reg_value);
++	u32 reg_value;
+ #define done (((reg_value = intel_uncore_read_fw(uncore, reg)) & mask) == value)
+ 	int ret;
+ 
+diff --git a/drivers/gpu/drm/i915/selftests/i915_gem_gtt.c b/drivers/gpu/drm/i915/selftests/i915_gem_gtt.c
+index 359493f9..ab84ce14 100644
+--- a/drivers/gpu/drm/i915/selftests/i915_gem_gtt.c
++++ b/drivers/gpu/drm/i915/selftests/i915_gem_gtt.c
+@@ -1063,7 +1063,7 @@ static int igt_ppgtt_shrink_boom(void *arg)
+ 	return exercise_ppgtt(arg, shrink_boom);
+ }
+ 
+-static int sort_holes(void *priv, struct list_head *A, struct list_head *B)
++static int sort_holes(void *priv, const struct list_head *A, const struct list_head *B)
+ {
+ 	struct drm_mm_node *a = list_entry(A, typeof(*a), hole_stack);
+ 	struct drm_mm_node *b = list_entry(B, typeof(*b), hole_stack);
+diff --git a/drivers/gpu/drm/nouveau/nouveau_svm.c b/drivers/gpu/drm/nouveau/nouveau_svm.c
+index df9bf1fd..2ecce029 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_svm.c
++++ b/drivers/gpu/drm/nouveau/nouveau_svm.c
+@@ -169,7 +169,7 @@ nouveau_svmm_bind(struct drm_device *dev, void *data,
+ 	 */
+ 
+ 	mm = get_task_mm(current);
+-	down_read(&mm->mmap_sem);
++	mmap_read_lock(mm);
+ 
+ 	for (addr = args->va_start, end = args->va_start + size; addr < end;) {
+ 		struct vm_area_struct *vma;
+@@ -192,7 +192,7 @@ nouveau_svmm_bind(struct drm_device *dev, void *data,
+ 	 */
+ 	args->result = 0;
+ 
+-	up_read(&mm->mmap_sem);
++	mmap_read_unlock(mm);
+ 	mmput(mm);
+ 
+ 	return 0;
+@@ -342,7 +342,7 @@ nouveau_svmm_init(struct drm_device *dev, void *data,
+ 	if (ret)
+ 		goto out_free;
+ 
+-	down_write(&current->mm->mmap_sem);
++	mmap_write_lock(current->mm);
+ 	svmm->notifier.ops = &nouveau_mn_ops;
+ 	ret = __mmu_notifier_register(&svmm->notifier, current->mm);
+ 	if (ret)
+@@ -351,12 +351,12 @@ nouveau_svmm_init(struct drm_device *dev, void *data,
+ 
+ 	cli->svm.svmm = svmm;
+ 	cli->svm.cli = cli;
+-	up_write(&current->mm->mmap_sem);
++	mmap_write_unlock(current->mm);
+ 	mutex_unlock(&cli->mutex);
+ 	return 0;
+ 
+ out_mm_unlock:
+-	up_write(&current->mm->mmap_sem);
++	mmap_write_unlock(current->mm);
+ out_free:
+ 	mutex_unlock(&cli->mutex);
+ 	kfree(svmm);
+@@ -540,9 +540,9 @@ static int nouveau_range_fault(struct nouveau_svmm *svmm,
+ 		range.notifier_seq = mmu_interval_read_begin(range.notifier);
+ 		range.default_flags = 0;
+ 		range.pfn_flags_mask = -1UL;
+-		down_read(&mm->mmap_sem);
++		mmap_read_lock(mm);
+ 		ret = hmm_range_fault(&range, 0);
+-		up_read(&mm->mmap_sem);
++		mmap_read_unlock(mm);
+ 		if (ret <= 0) {
+ 			if (ret == 0 || ret == -EBUSY)
+ 				continue;
+@@ -671,18 +671,18 @@ nouveau_svm_fault(struct nvif_notify *notify)
+ 		/* Intersect fault window with the CPU VMA, cancelling
+ 		 * the fault if the address is invalid.
+ 		 */
+-		down_read(&mm->mmap_sem);
++		mmap_read_lock(mm);
+ 		vma = find_vma_intersection(mm, start, limit);
+ 		if (!vma) {
+ 			SVMM_ERR(svmm, "wndw %016llx-%016llx", start, limit);
+-			up_read(&mm->mmap_sem);
++			mmap_read_unlock(mm);
+ 			mmput(mm);
+ 			nouveau_svm_fault_cancel_fault(svm, buffer->fault[fi]);
+ 			continue;
+ 		}
+ 		start = max_t(u64, start, vma->vm_start);
+ 		limit = min_t(u64, limit, vma->vm_end);
+-		up_read(&mm->mmap_sem);
++		mmap_read_unlock(mm);
+ 		SVMM_DBG(svmm, "wndw %016llx-%016llx", start, limit);
+ 
+ 		if (buffer->fault[fi]->addr != start) {
+diff --git a/drivers/gpu/drm/radeon/radeon_cs.c b/drivers/gpu/drm/radeon/radeon_cs.c
+index 0d0ab8e0..a75a75c5 100644
+--- a/drivers/gpu/drm/radeon/radeon_cs.c
++++ b/drivers/gpu/drm/radeon/radeon_cs.c
+@@ -196,12 +196,12 @@ static int radeon_cs_parser_relocs(struct radeon_cs_parser *p)
+ 		p->vm_bos = radeon_vm_get_bos(p->rdev, p->ib.vm,
+ 					      &p->validated);
+ 	if (need_mmap_lock)
+-		down_read(&current->mm->mmap_sem);
++		mmap_read_lock(current->mm);
+ 
+ 	r = radeon_bo_list_validate(p->rdev, &p->ticket, &p->validated, p->ring);
+ 
+ 	if (need_mmap_lock)
+-		up_read(&current->mm->mmap_sem);
++		mmap_read_unlock(current->mm);
+ 
+ 	return r;
+ }
+@@ -394,8 +394,8 @@ int radeon_cs_parser_init(struct radeon_cs_parser *p, void *data)
+ 	return 0;
+ }
+ 
+-static int cmp_size_smaller_first(void *priv, struct list_head *a,
+-				  struct list_head *b)
++static int cmp_size_smaller_first(void *priv, const struct list_head *a,
++				  const struct list_head *b)
+ {
+ 	struct radeon_bo_list *la = list_entry(a, struct radeon_bo_list, tv.head);
+ 	struct radeon_bo_list *lb = list_entry(b, struct radeon_bo_list, tv.head);
+diff --git a/drivers/gpu/drm/radeon/radeon_gem.c b/drivers/gpu/drm/radeon/radeon_gem.c
+index 068c3e5d..3c8f570a 100644
+--- a/drivers/gpu/drm/radeon/radeon_gem.c
++++ b/drivers/gpu/drm/radeon/radeon_gem.c
+@@ -342,17 +342,17 @@ int radeon_gem_userptr_ioctl(struct drm_device *dev, void *data,
+ 	}
+ 
+ 	if (args->flags & RADEON_GEM_USERPTR_VALIDATE) {
+-		down_read(&current->mm->mmap_sem);
++		mmap_read_lock(current->mm);
+ 		r = radeon_bo_reserve(bo, true);
+ 		if (r) {
+-			up_read(&current->mm->mmap_sem);
++			mmap_read_unlock(current->mm);
+ 			goto release_object;
+ 		}
+ 
+ 		radeon_ttm_placement_from_domain(bo, RADEON_GEM_DOMAIN_GTT);
+ 		r = ttm_bo_validate(&bo->tbo, &bo->placement, &ctx);
+ 		radeon_bo_unreserve(bo);
+-		up_read(&current->mm->mmap_sem);
++		mmap_read_unlock(current->mm);
+ 		if (r)
+ 			goto release_object;
+ 	}
+diff --git a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
+index 6e1270e4..dfe8ca20 100644
+--- a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
++++ b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
+@@ -516,8 +516,8 @@ dw_mipi_dsi_get_lane_mbps(void *priv_data, const struct drm_display_mode *mode,
+ 	unsigned long best_freq = 0;
+ 	unsigned long fvco_min, fvco_max, fin, fout;
+ 	unsigned int min_prediv, max_prediv;
+-	unsigned int _prediv, uninitialized_var(best_prediv);
+-	unsigned long _fbdiv, uninitialized_var(best_fbdiv);
++	unsigned int _prediv, best_prediv;
++	unsigned long _fbdiv, best_fbdiv;
+ 	unsigned long min_delta = ULONG_MAX;
+ 
+ 	dsi->format = format;
+diff --git a/drivers/gpu/drm/ttm/ttm_bo_vm.c b/drivers/gpu/drm/ttm/ttm_bo_vm.c
+index eebb4c06..3d427e1d 100644
+--- a/drivers/gpu/drm/ttm/ttm_bo_vm.c
++++ b/drivers/gpu/drm/ttm/ttm_bo_vm.c
+@@ -67,7 +67,7 @@ static vm_fault_t ttm_bo_vm_fault_idle(struct ttm_buffer_object *bo,
+ 			goto out_unlock;
+ 
+ 		ttm_bo_get(bo);
+-		up_read(&vmf->vma->vm_mm->mmap_sem);
++		mmap_read_unlock(vmf->vma->vm_mm);
+ 		(void) dma_fence_wait(bo->moving, true);
+ 		dma_resv_unlock(bo->base.resv);
+ 		ttm_bo_put(bo);
+@@ -138,7 +138,7 @@ vm_fault_t ttm_bo_vm_reserve(struct ttm_buffer_object *bo,
+ 		if (vmf->flags & FAULT_FLAG_ALLOW_RETRY) {
+ 			if (!(vmf->flags & FAULT_FLAG_RETRY_NOWAIT)) {
+ 				ttm_bo_get(bo);
+-				up_read(&vmf->vma->vm_mm->mmap_sem);
++				mmap_read_unlock(vmf->vma->vm_mm);
+ 				if (!dma_resv_lock_interruptible(bo->base.resv,
+ 								 NULL))
+ 					dma_resv_unlock(bo->base.resv);
+diff --git a/drivers/misc/mei/bus.c b/drivers/misc/mei/bus.c
+index b87cc253..113b320c 100644
+--- a/drivers/misc/mei/bus.c
++++ b/drivers/misc/mei/bus.c
+@@ -734,20 +734,15 @@ static int mei_cl_device_probe(struct device *dev)
+  *
+  * @dev: device
+  *
+- * Return:  0 on success; < 0 otherwise
++ * Return:  void
+  */
+-static int mei_cl_device_remove(struct device *dev)
++static void mei_cl_device_remove(struct device *dev)
+ 
+ {
+ 	struct mei_cl_device *cldev = to_mei_cl_device(dev);
+-
+-	struct mei_cl_driver *cldrv;
++	struct mei_cl_driver *cldrv = to_mei_cl_driver(dev->driver);
+ 	int ret = 0;
+ 
+-	if (!cldev || !dev->driver)
+-		return 0;
+-
+-	cldrv = to_mei_cl_driver(dev->driver);
+ 	if (cldrv->remove)
+ #ifdef BPM_BUS_REMOVE_FUNCTION_RETURN_TYPE_CHANGED
+ 		cldrv->remove(cldev);
+@@ -759,7 +754,7 @@ static int mei_cl_device_remove(struct device *dev)
+ 
+ 	mei_cl_bus_module_put(cldev);
+ 	module_put(THIS_MODULE);
+-        return ret;
++
+ }
+ 
+ static ssize_t name_show(struct device *dev, struct device_attribute *a,
+diff --git a/drivers/misc/mei/mei-gsc.mod b/drivers/misc/mei/mei-gsc.mod
+index f5295383..05dcf919 100644
+--- a/drivers/misc/mei/mei-gsc.mod
++++ b/drivers/misc/mei/mei-gsc.mod
+@@ -1,2 +1,2 @@
+-/home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/gsc-me.o
++/home/media/wj/kmd-backport/drivers/misc/mei/gsc-me.o
+ 
+diff --git a/drivers/misc/mei/mei-me.mod b/drivers/misc/mei/mei-me.mod
+index 9b12a2cf..8635ddc8 100644
+--- a/drivers/misc/mei/mei-me.mod
++++ b/drivers/misc/mei/mei-me.mod
+@@ -1,2 +1,2 @@
+-/home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/pci-me.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/hw-me.o
++/home/media/wj/kmd-backport/drivers/misc/mei/pci-me.o /home/media/wj/kmd-backport/drivers/misc/mei/hw-me.o
+ 
+diff --git a/drivers/misc/mei/mei.mod b/drivers/misc/mei/mei.mod
+index 706811a7..63e0c2ef 100644
+--- a/drivers/misc/mei/mei.mod
++++ b/drivers/misc/mei/mei.mod
+@@ -1,2 +1,2 @@
+-/home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/init.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/hbm.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/interrupt.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/client.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/main.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/dma-ring.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/bus.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/bus-fixup.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/debugfs.o /home/media/kmd-backport_sg1_5.10.104/out/drivers/misc/mei/mei-trace.o
++/home/media/wj/kmd-backport/drivers/misc/mei/init.o /home/media/wj/kmd-backport/drivers/misc/mei/hbm.o /home/media/wj/kmd-backport/drivers/misc/mei/interrupt.o /home/media/wj/kmd-backport/drivers/misc/mei/client.o /home/media/wj/kmd-backport/drivers/misc/mei/main.o /home/media/wj/kmd-backport/drivers/misc/mei/dma-ring.o /home/media/wj/kmd-backport/drivers/misc/mei/bus.o /home/media/wj/kmd-backport/drivers/misc/mei/bus-fixup.o /home/media/wj/kmd-backport/drivers/misc/mei/debugfs.o /home/media/wj/kmd-backport/drivers/misc/mei/mei-trace.o
+ 
+diff --git a/include/drm/intel-gtt.h b/include/drm/intel-gtt.h
+index a8dba006..7da7cb56 100644
+--- a/include/drm/intel-gtt.h
++++ b/include/drm/intel-gtt.h
+@@ -43,7 +43,7 @@ void intel_gtt_clear_range(unsigned int first_entry, unsigned int num_entries);
+ #define AGP_USER_CACHED_MEMORY_GFDT (1 << 3)
+ 
+ #ifdef CONFIG_INTEL_IOMMU
+-extern int intel_iommu_gfx_mapped;
++//extern int intel_iommu_gfx_mapped;
+ #endif
+ 
+ #endif
+diff --git a/include/linux/seq_file.h b/include/linux/seq_file.h
+index e18ffe07..4e19b53a 100644
+--- a/include/linux/seq_file.h
++++ b/include/linux/seq_file.h
+@@ -24,7 +24,7 @@ struct seq_file {
+ 	size_t pad_until;
+ 	loff_t index;
+ 	loff_t read_pos;
+-	u64 version;
++	//u64 version;
+ 	struct mutex lock;
+ 	const struct seq_operations *op;
+ 	int poll_event;
+diff --git a/install_kmd.sh b/install_kmd.sh
+index 12ce8831..e1c740fc 100755
+--- a/install_kmd.sh
++++ b/install_kmd.sh
+@@ -10,6 +10,8 @@ make -j32
+ cp -f ./compat/drm_ukmd_compat.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
+ cp -f ./drivers/gpu/drm/drm.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
+ cp -f ./drivers/gpu/drm/drm_kms_helper.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
++cp -f ./drivers/gpu/drm/drm_shmem_helper.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
++
+ cp -f ./drivers/gpu/drm/i915/i915.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
+ 
+ cp -f ./drivers/misc/mei/mei.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
+@@ -19,4 +21,4 @@ cp -f ./drivers/misc/mei/mei-gsc.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/
+ depmod -a ${TARGET_KERNEL_VERSION}
+ 
+ echo -e $ECHO_PREFIX_INFO "Calling mkinitrd upon ${TARGET_KERNEL_VERSION} kernel..."
+-mkinitrd --force /boot/initramfs-"${TARGET_KERNEL_VERSION}".img ${TARGET_KERNEL_VERSION}
++dracut --force /boot/initramfs-"${TARGET_KERNEL_VERSION}".img ${TARGET_KERNEL_VERSION}
+-- 
+2.39.1
+

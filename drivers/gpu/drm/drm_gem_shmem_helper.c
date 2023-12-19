@@ -683,3 +683,5 @@ err_free_gem:
 	return ERR_PTR(ret);
 }
 EXPORT_SYMBOL_GPL(drm_gem_shmem_prime_import_sg_table);
+
+MODULE_LICENSE("GPL");

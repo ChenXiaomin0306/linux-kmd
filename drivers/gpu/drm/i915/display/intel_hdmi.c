@@ -2869,8 +2869,8 @@ intel_hdmi_connector_register(struct drm_connector *connector)
 static void intel_hdmi_destroy(struct drm_connector *connector)
 {
 	struct cec_notifier *n = intel_attached_hdmi(to_intel_connector(connector))->cec_notifier;
-	if(n)
-		cec_notifier_put(n);
+
+	cec_notifier_conn_unregister(n);
 
 	intel_connector_destroy(connector);
 }
@@ -3214,7 +3214,8 @@ void intel_hdmi_init_connector(struct intel_digital_port *intel_dig_port,
 	struct drm_i915_private *dev_priv = to_i915(dev);
 	struct i2c_adapter *ddc;
 	enum port port = intel_encoder->port;
-
+	struct cec_connector_info conn_info;
+	
 	drm_dbg_kms(&dev_priv->drm,
 		    "Adding HDMI connector on [ENCODER:%d:%s]\n",
 		    intel_encoder->base.base.id, intel_encoder->base.name);
@@ -3274,7 +3275,11 @@ void intel_hdmi_init_connector(struct intel_digital_port *intel_dig_port,
 		               (temp & ~0xf) | 0xd);
 	}
 
-	intel_hdmi->cec_notifier = cec_notifier_get(dev->dev);
+	cec_fill_conn_info_from_drm(&conn_info, connector);
+
+	intel_hdmi->cec_notifier =
+		cec_notifier_conn_register(dev->dev, port_identifier(port),
+					   &conn_info);
 	if (!intel_hdmi->cec_notifier)
 		drm_dbg_kms(&dev_priv->drm, "CEC notifier get failed\n");
 }

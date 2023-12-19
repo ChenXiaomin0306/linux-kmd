@@ -82,28 +82,31 @@ __i915_gem_userptr_set_active(struct drm_i915_gem_object *obj, bool value)
 		del_object(mo);
 	spin_unlock(&mo->mn->lock);
 }
-
-static void 
+static int
 userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
-                                  struct mm_struct *mm,
-                                  unsigned long start,
-                                  unsigned long end)
+				  const struct mmu_notifier_range *range)
 {
 	struct i915_mmu_notifier *mn =
 		container_of(_mn, struct i915_mmu_notifier, mn);
 	struct interval_tree_node *it;
+	unsigned long end;
 	int ret = 0;
 
 	if (RB_EMPTY_ROOT(&mn->objects.rb_root))
 		return 0;
 
 	/* interval ranges are inclusive, but invalidate range is exclusive */
-	end = end - 1;
+	end = range->end - 1;
 
 	spin_lock(&mn->lock);
-	it = interval_tree_iter_first(&mn->objects, start, end);
+	it = interval_tree_iter_first(&mn->objects, range->start, end);
 	while (it) {
 		struct drm_i915_gem_object *obj;
+
+		if (!mmu_notifier_range_blockable(range)) {
+			ret = -EAGAIN;
+			break;
+		}
 
 		/*
 		 * The mmu_object is released late when destroying the
@@ -117,7 +120,7 @@ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
 		 */
 		obj = container_of(it, struct i915_mmu_object, it)->obj;
 		if (!kref_get_unless_zero(&obj->base.refcount)) {
-			it = interval_tree_iter_next(it, start, end);
+			it = interval_tree_iter_next(it, range->start, end);
 			continue;
 		}
 		spin_unlock(&mn->lock);
@@ -129,7 +132,7 @@ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
 			ret = __i915_gem_object_put_pages(obj);
 		i915_gem_object_put(obj);
 		if (ret)
-			return ret ;
+			return ret;
 
 		spin_lock(&mn->lock);
 
@@ -138,11 +141,11 @@ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
 		 * over this range, there is no guarantee that this search will
 		 * terminate given a pathologic workload.
 		 */
-		it = interval_tree_iter_first(&mn->objects, start, end);
+		it = interval_tree_iter_first(&mn->objects, range->start, end);
 	}
 	spin_unlock(&mn->lock);
 
-	return 0;
+	return ret;
 
 }
 
@@ -196,7 +199,7 @@ i915_mmu_notifier_find(struct i915_mm_struct *mm)
 	if (IS_ERR(mn))
 		err = PTR_ERR(mn);
 
-	down_write(&mm->mm->mmap_sem);
+	mmap_write_lock(mm->mm);
 	mutex_lock(&mm->i915->mm_lock);
 	if (mm->mn == NULL && !err) {
 		/* Protected by mmap_sem (write-lock) */
@@ -213,7 +216,7 @@ i915_mmu_notifier_find(struct i915_mm_struct *mm)
 		err = 0;
 	}
 	mutex_unlock(&mm->i915->mm_lock);
-	up_write(&mm->mm->mmap_sem);
+	mmap_write_unlock(mm->mm);
 
 	if (mn && !IS_ERR(mn))
 		kfree(mn);
@@ -465,11 +468,11 @@ __i915_gem_userptr_get_pages_worker(struct work_struct *_work)
 		if (mmget_not_zero(mm)) {
 			while (pinned < npages) {
 				if (!locked) {
-					down_read(&mm->mmap_sem);
+					mmap_write_lock(mm);
 					locked = 1;
 				}
 				ret = get_user_pages_remote
-					(work->task, mm,
+					(mm,
 					 obj->userptr.ptr + pinned * PAGE_SIZE,
 					 npages - pinned,
 					 flags,
@@ -480,7 +483,7 @@ __i915_gem_userptr_get_pages_worker(struct work_struct *_work)
 				pinned += ret;
 			}
 			if (locked)
-				up_read(&mm->mmap_sem);
+				mmap_write_unlock(mm);
 			mmput(mm);
 		}
 	}
@@ -596,7 +599,7 @@ static int i915_gem_userptr_get_pages(struct drm_i915_gem_object *obj)
 				      __GFP_NORETRY |
 				      __GFP_NOWARN);
 		if (pvec) /* defer to worker if malloc fails */
-			pinned = __get_user_pages_fast(obj->userptr.ptr,
+			pinned = get_user_pages_fast(obj->userptr.ptr,
 						       num_pages,
 						       !i915_gem_object_is_readonly(obj),
 						       pvec);

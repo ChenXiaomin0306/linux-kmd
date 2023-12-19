@@ -82,7 +82,7 @@ static const char *iommu_name(void)
 	const char *msg = "n/a";
 
 #ifdef CONFIG_INTEL_IOMMU
-	msg = enableddisabled(intel_iommu_gfx_mapped);
+	//msg = enableddisabled(intel_iommu_gfx_mapped);
 #endif
 
 	return msg;

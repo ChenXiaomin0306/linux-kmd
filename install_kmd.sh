@@ -10,6 +10,8 @@ make -j32
 cp -f ./compat/drm_ukmd_compat.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
 cp -f ./drivers/gpu/drm/drm.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
 cp -f ./drivers/gpu/drm/drm_kms_helper.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
+cp -f ./drivers/gpu/drm/drm_shmem_helper.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
+
 cp -f ./drivers/gpu/drm/i915/i915.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
 
 cp -f ./drivers/misc/mei/mei.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/ukmd/
@@ -19,4 +21,4 @@ cp -f ./drivers/misc/mei/mei-gsc.ko /lib/modules/${TARGET_KERNEL_VERSION}/extra/
 depmod -a ${TARGET_KERNEL_VERSION}
 
 echo -e $ECHO_PREFIX_INFO "Calling mkinitrd upon ${TARGET_KERNEL_VERSION} kernel..."
-mkinitrd --force /boot/initramfs-"${TARGET_KERNEL_VERSION}".img ${TARGET_KERNEL_VERSION}
+dracut --force /boot/initramfs-"${TARGET_KERNEL_VERSION}".img ${TARGET_KERNEL_VERSION}

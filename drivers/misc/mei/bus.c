@@ -734,20 +734,15 @@ static int mei_cl_device_probe(struct device *dev)
  *
  * @dev: device
  *
- * Return:  0 on success; < 0 otherwise
+ * Return:  void
  */
-static int mei_cl_device_remove(struct device *dev)
+static void mei_cl_device_remove(struct device *dev)
 
 {
 	struct mei_cl_device *cldev = to_mei_cl_device(dev);
-
-	struct mei_cl_driver *cldrv;
+	struct mei_cl_driver *cldrv = to_mei_cl_driver(dev->driver);
 	int ret = 0;
 
-	if (!cldev || !dev->driver)
-		return 0;
-
-	cldrv = to_mei_cl_driver(dev->driver);
 	if (cldrv->remove)
 #ifdef BPM_BUS_REMOVE_FUNCTION_RETURN_TYPE_CHANGED
 		cldrv->remove(cldev);
@@ -759,7 +754,7 @@ static int mei_cl_device_remove(struct device *dev)
 
 	mei_cl_bus_module_put(cldev);
 	module_put(THIS_MODULE);
-        return ret;
+
 }
 
 static ssize_t name_show(struct device *dev, struct device_attribute *a,

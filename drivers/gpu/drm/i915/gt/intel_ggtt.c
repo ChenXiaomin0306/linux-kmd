@@ -811,8 +811,8 @@ static int ggtt_probe_common(struct i915_ggtt *ggtt, u64 size)
 	 * resort to an uncached mapping. The WC issue is easily caught by the
 	 * readback check when writing GTT PTE entries.
 	 */
-	if (IS_GEN9_LP(i915) || INTEL_GEN(i915) >= 10)
-		ggtt->gsm = ioremap_nocache(phys_addr, size);
+	if (IS_GEN9_LP(i915) || INTEL_GEN(i915) >= 11)
+		ggtt->gsm = ioremap(phys_addr, size);
 	else
 		ggtt->gsm = ioremap_wc(phys_addr, size);
 	if (!ggtt->gsm) {

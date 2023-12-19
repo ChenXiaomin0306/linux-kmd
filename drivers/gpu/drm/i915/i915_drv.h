@@ -38,7 +38,7 @@
 #include <linux/i2c-algo-bit.h>
 #include <linux/backlight.h>
 #include <linux/hash.h>
-#include <linux/intel-iommu.h>
+//#include <linux/intel-iommu.h>
 #include <linux/kref.h>
 #include <linux/mm_types.h>
 #include <linux/perf_event.h>
@@ -1820,8 +1820,8 @@ extern const struct i915_rev_steppings kbl_revids[];
 static inline bool intel_vtd_active(void)
 {
 #ifdef CONFIG_INTEL_IOMMU
-	if (intel_iommu_gfx_mapped)
-		return true;
+	//if (intel_iommu_gfx_mapped)
+	//	return true;
 #endif
 	return false;
 }

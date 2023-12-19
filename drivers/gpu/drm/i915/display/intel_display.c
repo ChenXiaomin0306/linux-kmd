@@ -26,7 +26,7 @@
 
 #include <linux/i2c.h>
 #include <linux/input.h>
-#include <linux/intel-iommu.h>
+//#include <linux/intel-iommu.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/dma-resv.h>
@@ -15511,7 +15511,7 @@ static void intel_crtc_enable_trans_port_sync(struct intel_crtc *crtc,
 static void intel_set_dp_tp_ctl_normal(struct intel_crtc *crtc,
 				       struct intel_atomic_state *state)
 {
-	struct drm_connector *uninitialized_var(conn);
+	struct drm_connector *conn;
 	struct drm_connector_state *conn_state;
 	struct intel_dp *intel_dp;
 	int i;

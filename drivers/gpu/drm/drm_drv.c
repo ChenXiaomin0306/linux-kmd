@@ -523,17 +523,6 @@ static int drm_fs_init_fs_context(struct fs_context *fc)
 	return init_pseudo(fc, 0x010203ff) ? 0 : -ENOMEM;
 }
 
-
-
-static const struct dentry_operations drm_fs_dops = {
-        .d_dname        = simple_dname,
-};
-
-static const struct super_operations drm_fs_sops = {
-        .statfs         = simple_statfs,
-};
-
-
 static struct file_system_type drm_fs_type = {
 	.name		= "drm",
 	.owner		= THIS_MODULE,

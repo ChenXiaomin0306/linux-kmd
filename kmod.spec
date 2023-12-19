@@ -1,11 +1,11 @@
 # Define the kmod package name here.
 %define kmod_name ukmd
 
-%{!?_ver: %define _ver 4.18.0-477}
+%{!?_ver: %define _ver 5.14.0-284}
 %{!?_rever: %define _rever 54017}
 
 # If _kversion isn't defined on the rpmbuild line, define it here.
-%{!?_kversion: %define _kversion 4.18.0-477}
+%{!?_kversion: %define _kversion 5.14.0-284}
 
 Name:    kmod-%{kmod_name}
 Version: %{_ver}
@@ -20,14 +20,10 @@ BuildRequires: redhat-rpm-config
 ExclusiveArch: x86_64
 
 # Sources.
-# aaaaSource0:  %{kmod_name}-%{version}.tar.gz
 Source0:  %{name}-%{version}.tar.gz
 Source1:  dg1_guc_49.0.1.bin
 Source2:  dg1_huc_7.9.9.bin
 Source3:  dg1_dmc_ver2_02.bin
-
-# Magic hidden here.
-# %{expand:%     (sh %{SOURCE2} rpmtemplate %{kmod_name} %{_kversion} "")}
 
 # Disable the building of the debug package(s).
 %define debug_package %{nil}
@@ -51,6 +47,7 @@ pwd
 cp compat/drm_ukmd_compat.ko %{buildroot}/lib/modules/%{_kversion}/extra/%{kmod_name}/
 cp drivers/gpu/drm/drm.ko %{buildroot}/lib/modules/%{_kversion}/extra/%{kmod_name}/
 cp drivers/gpu/drm/drm_kms_helper.ko %{buildroot}/lib/modules/%{_kversion}/extra/%{kmod_name}/
+cp drivers/gpu/drm/drm_shmem_helper.ko %{buildroot}/lib/modules/%{_kversion}/extra/%{kmod_name}/
 cp drivers/gpu/drm/i915/i915.ko %{buildroot}/lib/modules/%{_kversion}/extra/%{kmod_name}/
 cp drivers/gpu/drm/i915/i915_spi.ko %{buildroot}/lib/modules/%{_kversion}/extra/%{kmod_name}/
 cp drivers/misc/mei/mei.ko %{buildroot}/lib/modules/%{_kversion}/extra/%{kmod_name}/
@@ -61,6 +58,7 @@ echo "override drm * extra/ukmd" > %{buildroot}%{_sysconfdir}/depmod.d/kmod-ukmd
 echo "override drm_ukmd_compat * extra/ukmd" >> %{buildroot}%{_sysconfdir}/depmod.d/kmod-ukmd.conf
 echo "override drm * extra/ukmd" >> %{buildroot}%{_sysconfdir}/depmod.d/kmod-ukmd.conf
 echo "override drm_kms_helper * extra/ukmd" >> %{buildroot}%{_sysconfdir}/depmod.d/kmod-ukmd.conf
+echo "override drm_shmem_helper * extra/ukmd" >> %{buildroot}%{_sysconfdir}/depmod.d/kmod-ukmd.conf
 echo "override i915 * extra/ukmd" >> %{buildroot}%{_sysconfdir}/depmod.d/kmod-ukmd.conf
 echo "override i915_spi * extra/ukmd" >> %{buildroot}%{_sysconfdir}/depmod.d/kmod-ukmd.conf
 echo "override mei * extra/ukmd" >> %{buildroot}%{_sysconfdir}/depmod.d/kmod-ukmd.conf
@@ -77,6 +75,7 @@ echo "override mei-gsc * extra/ukmd" >> %{buildroot}%{_sysconfdir}/depmod.d/kmod
 /lib/modules/%{_kversion}/extra/%{kmod_name}/drm.ko
 /lib/modules/%{_kversion}/extra/%{kmod_name}/drm_ukmd_compat.ko
 /lib/modules/%{_kversion}/extra/%{kmod_name}/drm_kms_helper.ko
+/lib/modules/%{_kversion}/extra/%{kmod_name}/drm_shmem_helper.ko
 /lib/modules/%{_kversion}/extra/%{kmod_name}/i915.ko
 /lib/modules/%{_kversion}/extra/%{kmod_name}/i915_spi.ko
 /lib/modules/%{_kversion}/extra/%{kmod_name}/mei.ko

@@ -24,7 +24,10 @@ drm-$(CPTCFG_DRM_LIB_RANDOM) += lib/drm_random.o
 drm-$(CPTCFG_DRM_VM) += drm_vm.o
 drm-$(CONFIG_COMPAT) += drm_ioc32.o
 drm-$(CPTCFG_DRM_GEM_CMA_HELPER) += drm_gem_cma_helper.o
-drm-$(CPTCFG_DRM_GEM_SHMEM_HELPER) += drm_gem_shmem_helper.o
+
+drm_shmem_helper-y := drm_gem_shmem_helper.o
+obj-$(CONFIG_DRM_GEM_SHMEM_HELPER) += drm_shmem_helper.o
+
 drm-$(CPTCFG_DRM_PANEL) += drm_panel.o
 drm-$(CONFIG_OF) += drm_of.o
 drm-$(CONFIG_AGP) += drm_agpsupport.o

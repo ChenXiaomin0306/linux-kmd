@@ -105,7 +105,7 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
  * 		 		 		 		 */
 		*locked = 1;
 		lock_dropped = true;
-		down_read(&mm->mmap_sem);
+		mmap_read_lock(mm);
 		ret = __get_user_pages(tsk, mm, start, 1, flags | FOLL_TRIED,
 				       pages, NULL, NULL);
 		if (ret != 1) {
@@ -126,7 +126,7 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
  * 		 * We must let the caller know we temporarily dropped the lock
  * 		 		 * and so the critical section protected by it was lost.
  * 		 		 		 */
-		up_read(&mm->mmap_sem);
+		mmap_read_unlock(mm);
 		*locked = 0;
 	}
 	return pages_done;

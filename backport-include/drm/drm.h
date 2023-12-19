@@ -29,7 +29,7 @@
 #define _BACKPORT_DRM_MODES_H
 #include <linux/version.h>
 
-//#include <drm/rename-symbols.h>
+#include <drm/rename-symbols.h>
 #include_next <drm/drm.h>
 
 #endif

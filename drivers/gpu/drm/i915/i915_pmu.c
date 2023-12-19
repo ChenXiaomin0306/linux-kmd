@@ -427,7 +427,7 @@ static enum hrtimer_restart i915_sample(struct hrtimer *hrtimer)
 static u64 count_interrupts(struct drm_i915_private *i915)
 {
 	/* open-coded kstat_irqs() */
-	struct irq_desc *desc = irq_to_desc(i915->drm.pdev->irq);
+	struct irq_desc *desc = irq_data_to_desc( irq_get_irq_data(i915->drm.pdev->irq));
 	u64 sum = 0;
 	int cpu;
 

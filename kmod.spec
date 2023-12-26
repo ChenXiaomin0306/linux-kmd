@@ -103,7 +103,7 @@ for kv in `ls /lib/modules | grep %{_kversion}`; do
 
     if [ -e "/boot/initramfs-${kv}.img" ]; then
         depmod -a ${kv}
-        mkinitrd --force /boot/initramfs-${kv}.img ${kv}
+         dracut --force /boot/initramfs-${kv}.img ${kv}
     fi
 done
 
@@ -117,6 +117,6 @@ for kv in `ls /lib/modules | grep %{_kversion}`; do
     rm -rf /lib/modules/%{_kversion}/extra/%{kmod_name}
     if [ -e "/boot/initramfs-${kv}.img" ]; then
         depmod -a ${kv}
-        mkinitrd --force /boot/initramfs-${kv}.img ${kv}
+        dracut --force /boot/initramfs-${kv}.img ${kv}
     fi
 done
